@@ -21,14 +21,27 @@ pnpm run generate
 echo "🔀 Switching to gh-pages branch..."
 git checkout gh-pages || git checkout -b gh-pages
 
-# Copy all generated files from .output/public to root
+# Store .git temporarily
 echo "📋 Copying generated files to root..."
-rm -rf ./*
+GIT_BACKUP=$(mktemp -d)
+cp -r .git "$GIT_BACKUP/"
+
+# Remove everything except .git
+rm -rf .[^.]* *
+rm -rf .[^g]*
+rm -rf .g[^i]*
+rm -rf .gi[^t]*
+
+# Restore .git
+cp -r "$GIT_BACKUP/.git" .
+rm -rf "$GIT_BACKUP"
+
+# Copy generated files
 cp -r .output/public/* .
 
 # Remove development files and directories that shouldn't be in production
 echo "🧹 Cleaning development files..."
-rm -rf node_modules .output .nuxt .git .github .vscode coverage playwright-report test-results .cursorrules .DS_Store DEPLOYMENT.md CHANGELOG.md README.md playwright.config.ts package.json package-lock.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc .editorconfig renovate.json eslint.config.mjs tsconfig.json nuxt.config.ts app reshot-icon-emotion-WYMLSU5D4V.svg
+rm -rf node_modules .output .nuxt .github .vscode coverage playwright-report test-results .cursorrules .DS_Store DEPLOYMENT.md CHANGELOG.md README.md playwright.config.ts package.json package-lock.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc .editorconfig renovate.json eslint.config.mjs tsconfig.json nuxt.config.ts app reshot-icon-emotion-WYMLSU5D4V.svg
 
 # Add and commit all changes (including deletions)
 echo "💾 Committing changes..."
