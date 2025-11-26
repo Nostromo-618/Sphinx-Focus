@@ -9,11 +9,6 @@ export default defineNuxtConfig({
     enabled: true
   },
 
-  // GitHub Pages base URL
-  app: {
-    baseURL: '/sphinx-focus/'
-  },
-
   css: ['~/assets/css/main.css'],
 
   routeRules: {
