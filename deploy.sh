@@ -17,8 +17,8 @@ pnpm install
 echo "🔨 Generating static site..."
 pnpm run generate
 
-# Store the output in a temp location BEFORE switching branches
-echo "📦 Storing generated files in temp location..."
+# Store the output in a temp location
+echo "📦 Storing generated files..."
 TEMP_DIR=$(mktemp -d)
 cp -r .output/public/* "$TEMP_DIR/"
 
