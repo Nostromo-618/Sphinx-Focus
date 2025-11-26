@@ -5,13 +5,13 @@ export default defineNuxtConfig({
     '@nuxt/ui'
   ],
 
+  devtools: {
+    enabled: true
+  },
+
   // GitHub Pages base URL
   app: {
     baseURL: '/sphinx-focus/'
-  },
-
-  devtools: {
-    enabled: true
   },
 
   css: ['~/assets/css/main.css'],

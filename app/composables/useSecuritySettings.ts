@@ -13,7 +13,7 @@ interface SecurityConfig {
 }
 
 const STORAGE_KEY = 'sphinx-focus-security'
-const SESSION_KEY_SYMBOL = Symbol('sessionKey')
+const _SESSION_KEY_SYMBOL = Symbol('sessionKey')
 
 // In-memory session key (never persisted for PIN mode)
 let sessionKey: CryptoKey | null = null
@@ -226,4 +226,3 @@ export function useSecuritySettings() {
     lock
   }
 }
-

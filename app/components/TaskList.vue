@@ -140,7 +140,7 @@ function handleDragLeave() {
 
 function handleDrop(event: DragEvent, targetTaskId: string) {
   event.preventDefault()
-  
+
   if (!draggedTaskId.value || draggedTaskId.value === targetTaskId) {
     draggedTaskId.value = null
     return
@@ -151,13 +151,18 @@ function handleDrop(event: DragEvent, targetTaskId: string) {
 
   if (draggedIndex !== -1 && targetIndex !== -1) {
     // Swap orders
-    const draggedOrder = tasks.value[draggedIndex].order
-    const targetOrder = tasks.value[targetIndex].order
-    
-    tasks.value[draggedIndex].order = targetOrder
-    tasks.value[targetIndex].order = draggedOrder
-    
-    sortTasks()
+    const draggedTask = tasks.value[draggedIndex]
+    const targetTask = tasks.value[targetIndex]
+
+    if (draggedTask && targetTask) {
+      const draggedOrder = draggedTask.order
+      const targetOrder = targetTask.order
+
+      draggedTask.order = targetOrder
+      targetTask.order = draggedOrder
+
+      sortTasks()
+    }
   }
 
   draggedTaskId.value = null
@@ -183,38 +188,44 @@ function handleKeyPress(event: KeyboardEvent) {
       <UInput
         v-model="newTaskText"
         placeholder="Add a new task..."
-        @keypress="handleKeyPress"
         class="flex-1"
+        @keypress="handleKeyPress"
       />
       <UButton
         label="Add"
         icon="i-lucide-plus"
-        @click="addTask"
         :disabled="!newTaskText.trim()"
         color="primary"
+        @click="addTask"
       />
     </div>
 
     <!-- Task List -->
-    <div v-if="tasks.length === 0" class="text-center py-8 text-muted">
+    <div
+      v-if="tasks.length === 0"
+      class="text-center py-8 text-muted"
+    >
       <p>No tasks yet. Add one above to get started!</p>
     </div>
 
-    <div v-else class="space-y-2">
+    <div
+      v-else
+      class="space-y-2"
+    >
       <div
         v-for="task in tasks"
         :key="task.id"
         :draggable="true"
-        @dragstart="handleDragStart($event, task.id)"
-        @dragover="handleDragOver($event, task.id)"
-        @dragleave="handleDragLeave"
-        @drop="handleDrop($event, task.id)"
-        @dragend="handleDragEnd"
         class="flex items-center gap-3 p-3 rounded-lg border border-border bg-default hover:bg-elevated transition-colors cursor-move"
         :class="{
           'opacity-50': draggedTaskId === task.id,
           'ring-2 ring-primary': dragOverTaskId === task.id && draggedTaskId !== task.id
         }"
+        @dragstart="handleDragStart($event, task.id)"
+        @dragover="handleDragOver($event, task.id)"
+        @dragleave="handleDragLeave"
+        @drop="handleDrop($event, task.id)"
+        @dragend="handleDragEnd"
       >
         <!-- Drag Handle -->
         <UIcon
@@ -226,9 +237,9 @@ function handleKeyPress(event: KeyboardEvent) {
         <input
           type="checkbox"
           :checked="task.completed"
-          @change="toggleTask(task.id)"
           class="size-5 rounded border-border text-primary focus:ring-primary cursor-pointer"
-        />
+          @change="toggleTask(task.id)"
+        >
 
         <!-- Task Text -->
         <span
@@ -246,11 +257,10 @@ function handleKeyPress(event: KeyboardEvent) {
           color="error"
           variant="ghost"
           size="xs"
-          @click="deleteTask(task.id)"
           aria-label="Delete task"
+          @click="deleteTask(task.id)"
         />
       </div>
     </div>
   </div>
 </template>
-

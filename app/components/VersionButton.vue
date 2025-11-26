@@ -115,7 +115,10 @@ const changeTypeColors: Record<string, string> = {
                     {{ changeTypeLabels[type] }}
                   </div>
                   <ul class="ml-6 list-disc space-y-1 text-sm text-default">
-                    <li v-for="item in items" :key="item">
+                    <li
+                      v-for="item in items"
+                      :key="item"
+                    >
                       {{ item }}
                     </li>
                   </ul>
@@ -128,4 +131,3 @@ const changeTypeColors: Record<string, string> = {
     </template>
   </UModal>
 </template>
-

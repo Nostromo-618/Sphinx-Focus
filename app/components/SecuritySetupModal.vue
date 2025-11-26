@@ -40,7 +40,7 @@ function handlePinKeydown(index: number, event: KeyboardEvent, isConfirm = false
     const targetRef = isConfirm ? confirmPin : pin
     const inputs = isConfirm ? confirmPinInputs.value : pinInputs.value
 
-    if (!inputs[index].value && index > 0) {
+    if (!inputs[index]?.value && index > 0) {
       inputs[index - 1]?.focus()
       const currentValue = targetRef.value.split('')
       currentValue[index - 1] = ''
@@ -106,13 +106,23 @@ function goBack() {
   >
     <template #header>
       <!-- Mode Selection Header -->
-      <div v-if="currentStep === 'select'" class="text-center w-full">
-        <h2 class="text-xl font-semibold text-highlighted">Choose Your Security Level</h2>
-        <p class="text-sm text-muted mt-1">How would you like to protect your tasks?</p>
+      <div
+        v-if="currentStep === 'select'"
+        class="text-center w-full"
+      >
+        <h2 class="text-xl font-semibold text-highlighted">
+          Choose Your Security Level
+        </h2>
+        <p class="text-sm text-muted mt-1">
+          How would you like to protect your tasks?
+        </p>
       </div>
 
       <!-- PIN Setup Header -->
-      <div v-else class="flex items-center gap-3 w-full">
+      <div
+        v-else
+        class="flex items-center gap-3 w-full"
+      >
         <UButton
           icon="i-lucide-arrow-left"
           color="neutral"
@@ -121,15 +131,22 @@ function goBack() {
           @click="goBack"
         />
         <div>
-          <h2 class="text-xl font-semibold text-highlighted">Create Your PIN</h2>
-          <p class="text-sm text-muted">Enter a 4-digit PIN to secure your tasks</p>
+          <h2 class="text-xl font-semibold text-highlighted">
+            Create Your PIN
+          </h2>
+          <p class="text-sm text-muted">
+            Enter a 4-digit PIN to secure your tasks
+          </p>
         </div>
       </div>
     </template>
 
     <template #body>
       <!-- Mode Selection Body -->
-      <div v-if="currentStep === 'select'" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div
+        v-if="currentStep === 'select'"
+        class="grid grid-cols-1 sm:grid-cols-2 gap-4"
+      >
         <!-- PIN Protected Option -->
         <button
           type="button"
@@ -139,19 +156,32 @@ function goBack() {
         >
           <div class="flex flex-col items-center text-center space-y-3">
             <div class="p-3 rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-              <UIcon name="i-lucide-shield-check" class="size-8" />
+              <UIcon
+                name="i-lucide-shield-check"
+                class="size-8"
+              />
             </div>
             <div>
-              <h3 class="font-semibold text-highlighted">Maximum Security</h3>
-              <p class="text-sm text-muted mt-1">Protected by 4-digit PIN</p>
+              <h3 class="font-semibold text-highlighted">
+                Maximum Security
+              </h3>
+              <p class="text-sm text-muted mt-1">
+                Protected by 4-digit PIN
+              </p>
             </div>
             <ul class="text-xs text-muted space-y-1">
               <li class="flex items-center gap-1">
-                <UIcon name="i-lucide-check" class="size-3 text-success" />
+                <UIcon
+                  name="i-lucide-check"
+                  class="size-3 text-success"
+                />
                 Key never stored
               </li>
               <li class="flex items-center gap-1">
-                <UIcon name="i-lucide-check" class="size-3 text-success" />
+                <UIcon
+                  name="i-lucide-check"
+                  class="size-3 text-success"
+                />
                 Data unreadable without PIN
               </li>
             </ul>
@@ -172,19 +202,32 @@ function goBack() {
         >
           <div class="flex flex-col items-center text-center space-y-3">
             <div class="p-3 rounded-full bg-warning/10 text-warning group-hover:bg-warning group-hover:text-white transition-colors">
-              <UIcon name="i-lucide-zap" class="size-8" />
+              <UIcon
+                name="i-lucide-zap"
+                class="size-8"
+              />
             </div>
             <div>
-              <h3 class="font-semibold text-highlighted">Quick Access</h3>
-              <p class="text-sm text-muted mt-1">No PIN required</p>
+              <h3 class="font-semibold text-highlighted">
+                Quick Access
+              </h3>
+              <p class="text-sm text-muted mt-1">
+                No PIN required
+              </p>
             </div>
             <ul class="text-xs text-muted space-y-1">
               <li class="flex items-center gap-1">
-                <UIcon name="i-lucide-check" class="size-3 text-success" />
+                <UIcon
+                  name="i-lucide-check"
+                  class="size-3 text-success"
+                />
                 Data still encrypted
               </li>
               <li class="flex items-center gap-1">
-                <UIcon name="i-lucide-info" class="size-3 text-muted" />
+                <UIcon
+                  name="i-lucide-info"
+                  class="size-3 text-muted"
+                />
                 Key stored locally
               </li>
             </ul>
@@ -193,7 +236,10 @@ function goBack() {
       </div>
 
       <!-- PIN Setup Body -->
-      <div v-else class="space-y-6">
+      <div
+        v-else
+        class="space-y-6"
+      >
         <!-- Enter PIN -->
         <div class="space-y-2">
           <label class="text-sm font-medium text-default">Enter PIN</label>
@@ -233,8 +279,13 @@ function goBack() {
         </div>
 
         <!-- Error Message -->
-        <div v-if="pinError" class="text-center">
-          <p class="text-sm text-error">{{ pinError }}</p>
+        <div
+          v-if="pinError"
+          class="text-center"
+        >
+          <p class="text-sm text-error">
+            {{ pinError }}
+          </p>
         </div>
 
         <!-- Submit Button -->
@@ -252,7 +303,10 @@ function goBack() {
         <!-- Warning -->
         <div class="p-3 rounded-lg bg-warning/10 border border-warning/20">
           <p class="text-xs text-warning flex items-start gap-2">
-            <UIcon name="i-lucide-alert-triangle" class="size-4 shrink-0 mt-0.5" />
+            <UIcon
+              name="i-lucide-alert-triangle"
+              class="size-4 shrink-0 mt-0.5"
+            />
             <span>
               <strong>Important:</strong> If you forget your PIN, you'll need to clear all data and start fresh. There's no recovery option.
             </span>

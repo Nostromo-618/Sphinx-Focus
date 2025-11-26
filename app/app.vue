@@ -23,7 +23,7 @@ useSeoMeta({
 })
 
 // Security state
-const { initialize, isInitialized, isUnlocked, currentMode, isFirstRun, lock, clearAllData } = useSecuritySettings()
+const { initialize, isInitialized: _isInitialized, isUnlocked, currentMode, isFirstRun, lock, clearAllData } = useSecuritySettings()
 
 const showSetupModal = ref(false)
 const showPINModal = ref(false)
@@ -113,7 +113,10 @@ function cancelClearData() {
       <template #body>
         <div class="space-y-4">
           <div class="flex items-center gap-3 p-3 rounded-lg bg-error/10 border border-error/20">
-            <UIcon name="i-lucide-alert-triangle" class="size-6 text-error shrink-0" />
+            <UIcon
+              name="i-lucide-alert-triangle"
+              class="size-6 text-error shrink-0"
+            />
             <p class="text-sm text-error">
               This will permanently delete all your tasks and reset security settings. This action cannot be undone.
             </p>
@@ -142,7 +145,10 @@ function cancelClearData() {
     <template v-if="appReady">
       <UHeader>
         <template #left>
-          <NuxtLink to="/" class="font-semibold text-lg">
+          <NuxtLink
+            to="/"
+            class="font-semibold text-lg"
+          >
             Sphinx Focus
           </NuxtLink>
         </template>
@@ -185,10 +191,18 @@ function cancelClearData() {
     </template>
 
     <!-- Loading state while checking security -->
-    <div v-else-if="!showSetupModal && !showPINModal" class="min-h-screen flex items-center justify-center">
+    <div
+      v-else-if="!showSetupModal && !showPINModal"
+      class="min-h-screen flex items-center justify-center"
+    >
       <div class="flex flex-col items-center gap-4">
-        <UIcon name="i-lucide-loader-2" class="size-8 text-primary animate-spin" />
-        <p class="text-muted">Loading...</p>
+        <UIcon
+          name="i-lucide-loader-2"
+          class="size-8 text-primary animate-spin"
+        />
+        <p class="text-muted">
+          Loading...
+        </p>
       </div>
     </div>
   </UApp>

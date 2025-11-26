@@ -176,7 +176,11 @@ onUnmounted(() => {
 
     <!-- Circular Progress Indicator -->
     <div class="relative mb-6">
-      <svg class="transform -rotate-90" width="200" height="200">
+      <svg
+        class="transform -rotate-90"
+        width="200"
+        height="200"
+      >
         <!-- Background circle -->
         <circle
           cx="100"
@@ -201,7 +205,7 @@ onUnmounted(() => {
           stroke-linecap="round"
         />
       </svg>
-      
+
       <!-- Time display in center -->
       <div class="absolute inset-0 flex flex-col items-center justify-center">
         <div class="text-4xl font-bold text-highlighted mb-1">
@@ -219,40 +223,39 @@ onUnmounted(() => {
         v-if="state === 'idle'"
         label="Start"
         icon="i-lucide-play"
-        @click="startTimer"
         color="primary"
+        @click="startTimer"
       />
       <UButton
         v-else-if="state === 'running'"
         label="Pause"
         icon="i-lucide-pause"
-        @click="pauseTimer"
         color="warning"
+        @click="pauseTimer"
       />
       <UButton
         v-else-if="state === 'paused'"
         label="Resume"
         icon="i-lucide-play"
-        @click="startTimer"
         color="primary"
+        @click="startTimer"
       />
       <UButton
         v-if="state === 'running' || state === 'paused'"
         label="Skip"
         icon="i-lucide-skip-forward"
-        @click="skipSession"
         color="neutral"
         variant="outline"
+        @click="skipSession"
       />
       <UButton
         label="Reset"
         icon="i-lucide-rotate-ccw"
-        @click="resetTimer"
         color="neutral"
         variant="outline"
         :disabled="state === 'idle' && timeRemaining === totalTime"
+        @click="resetTimer"
       />
     </div>
   </div>
 </template>
-

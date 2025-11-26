@@ -4,14 +4,18 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <UCard>
           <template #header>
-            <h3 class="text-lg font-semibold">Focus Timer</h3>
+            <h3 class="text-lg font-semibold">
+              Focus Timer
+            </h3>
           </template>
           <FocusTimer />
         </UCard>
 
         <UCard>
           <template #header>
-            <h3 class="text-lg font-semibold">Task List</h3>
+            <h3 class="text-lg font-semibold">
+              Task List
+            </h3>
           </template>
           <TaskList />
         </UCard>

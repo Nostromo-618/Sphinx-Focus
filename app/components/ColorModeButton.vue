@@ -55,4 +55,3 @@ const dropdownItems = computed(() => {
     />
   </UDropdownMenu>
 </template>
-

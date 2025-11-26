@@ -44,9 +44,9 @@ const dropdownItems = computed(() => {
     onClick: () => emit('changeMode')
   })
 
-  // Divider
+  // Separator
   items.push({
-    type: 'divider' as const
+    type: 'separator' as const
   })
 
   // Clear All Data
@@ -75,4 +75,3 @@ const dropdownItems = computed(() => {
     />
   </UDropdownMenu>
 </template>
-

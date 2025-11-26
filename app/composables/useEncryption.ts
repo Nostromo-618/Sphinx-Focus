@@ -54,7 +54,7 @@ export function useEncryption() {
     return crypto.subtle.deriveKey(
       {
         name: 'PBKDF2',
-        salt,
+        salt: salt as BufferSource,
         iterations: PBKDF2_ITERATIONS,
         hash: 'SHA-256'
       },
@@ -97,7 +97,7 @@ export function useEncryption() {
     const iv = generateIV()
 
     const ciphertext = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
+      { name: 'AES-GCM', iv: iv as BufferSource },
       key,
       dataBuffer
     )
@@ -134,11 +134,11 @@ export function useEncryption() {
   /**
    * Convert ArrayBuffer to base64 string
    */
-  function arrayBufferToBase64(buffer: ArrayBuffer): string {
-    const bytes = new Uint8Array(buffer)
+  function arrayBufferToBase64(buffer: ArrayBuffer | ArrayBufferLike): string {
+    const bytes = new Uint8Array(buffer as ArrayBuffer)
     let binary = ''
     for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i])
+      binary += String.fromCharCode(bytes[i]!)
     }
     return btoa(binary)
   }
@@ -159,7 +159,7 @@ export function useEncryption() {
    * Convert Uint8Array to base64 string
    */
   function uint8ArrayToBase64(array: Uint8Array): string {
-    return arrayBufferToBase64(array.buffer)
+    return arrayBufferToBase64(array.buffer as ArrayBuffer)
   }
 
   /**
@@ -181,4 +181,3 @@ export function useEncryption() {
     base64ToUint8Array
   }
 }
-

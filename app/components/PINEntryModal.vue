@@ -38,7 +38,7 @@ function handlePinInput(index: number, event: Event) {
 
 function handlePinKeydown(index: number, event: KeyboardEvent) {
   if (event.key === 'Backspace') {
-    if (!pinInputs.value[index].value && index > 0) {
+    if (!pinInputs.value[index]?.value && index > 0) {
       pinInputs.value[index - 1]?.focus()
       const currentValue = pin.value.split('')
       currentValue[index - 1] = ''
@@ -66,7 +66,7 @@ async function submitPIN() {
       pin.value = ''
 
       // Clear inputs and focus first
-      pinInputs.value.forEach(input => {
+      pinInputs.value.forEach((input) => {
         if (input) input.value = ''
       })
       pinInputs.value[0]?.focus()
@@ -111,26 +111,47 @@ onMounted(() => {
   >
     <template #header>
       <!-- Reset Confirmation Header -->
-      <div v-if="showResetConfirm" class="text-center w-full">
+      <div
+        v-if="showResetConfirm"
+        class="text-center w-full"
+      >
         <div class="mx-auto w-12 h-12 rounded-full bg-error/10 flex items-center justify-center mb-3">
-          <UIcon name="i-lucide-alert-triangle" class="size-6 text-error" />
+          <UIcon
+            name="i-lucide-alert-triangle"
+            class="size-6 text-error"
+          />
         </div>
-        <h2 class="text-xl font-semibold text-highlighted">Reset All Data?</h2>
+        <h2 class="text-xl font-semibold text-highlighted">
+          Reset All Data?
+        </h2>
       </div>
 
       <!-- PIN Entry Header -->
-      <div v-else class="text-center w-full">
+      <div
+        v-else
+        class="text-center w-full"
+      >
         <div class="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-          <UIcon name="i-lucide-lock" class="size-6 text-primary" />
+          <UIcon
+            name="i-lucide-lock"
+            class="size-6 text-primary"
+          />
         </div>
-        <h2 class="text-xl font-semibold text-highlighted">Welcome Back</h2>
-        <p class="text-sm text-muted mt-1">Enter your PIN to unlock</p>
+        <h2 class="text-xl font-semibold text-highlighted">
+          Welcome Back
+        </h2>
+        <p class="text-sm text-muted mt-1">
+          Enter your PIN to unlock
+        </p>
       </div>
     </template>
 
     <template #body>
       <!-- Reset Confirmation Body -->
-      <div v-if="showResetConfirm" class="space-y-4">
+      <div
+        v-if="showResetConfirm"
+        class="space-y-4"
+      >
         <p class="text-sm text-muted text-center">
           This will permanently delete all your tasks and reset the app. This action cannot be undone.
         </p>
@@ -153,7 +174,10 @@ onMounted(() => {
       </div>
 
       <!-- PIN Entry Body -->
-      <div v-else class="space-y-6">
+      <div
+        v-else
+        class="space-y-6"
+      >
         <!-- PIN Input -->
         <div class="pin-container flex justify-center gap-3">
           <input
@@ -173,16 +197,30 @@ onMounted(() => {
         </div>
 
         <!-- Error Message -->
-        <div v-if="pinError" class="text-center">
-          <p class="text-sm text-error">{{ pinError }}</p>
-          <p v-if="attempts >= 3" class="text-xs text-muted mt-1">
+        <div
+          v-if="pinError"
+          class="text-center"
+        >
+          <p class="text-sm text-error">
+            {{ pinError }}
+          </p>
+          <p
+            v-if="attempts >= 3"
+            class="text-xs text-muted mt-1"
+          >
             Too many attempts? Try the forgot PIN option below.
           </p>
         </div>
 
         <!-- Loading indicator -->
-        <div v-if="isLoading" class="flex justify-center">
-          <UIcon name="i-lucide-loader-2" class="size-6 text-primary animate-spin" />
+        <div
+          v-if="isLoading"
+          class="flex justify-center"
+        >
+          <UIcon
+            name="i-lucide-loader-2"
+            class="size-6 text-primary animate-spin"
+          />
         </div>
 
         <!-- Forgot PIN -->
