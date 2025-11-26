@@ -9,28 +9,26 @@ echo "🚀 Starting deployment to GitHub Pages..."
 echo "📌 Ensuring we're on main branch..."
 git checkout main
 
-# Build the project
-echo "🔨 Building project..."
-npm run build
+# Install dependencies
+echo "📦 Installing dependencies..."
+pnpm install
+
+# Generate static site
+echo "🔨 Generating static site..."
+pnpm run generate
 
 # Switch to gh-pages
 echo "🔀 Switching to gh-pages branch..."
-git checkout gh-pages
+git checkout gh-pages || git checkout -b gh-pages
 
-# Copy built files from main branch
-echo "📋 Copying built files from main branch..."
-git show main:index.html > index.html
-git show main:styles.css > styles.css
-git show main:app.js > app.js
-git show main:favicon.ico > favicon.ico
-
-# Copy directories using checkout
-echo "📁 Copying directories..."
-git checkout main -- fonts/ media/ services/ 2>/dev/null || true
+# Copy all generated files from .output/public to root
+echo "📋 Copying generated files to root..."
+rm -rf ./*
+cp -r .output/public/* .
 
 # Remove development files and directories that shouldn't be in production
 echo "🧹 Cleaning development files..."
-rm -rf node_modules dist tests/ .git .github .vscode coverage playwright-report test-results .cursorrules .gitignore package.json package-lock.json .DS_Store DEPLOYMENT.md CHANGELOG.md FIBONACCI-MODE.md README.md playwright.config.ts
+rm -rf node_modules .output .nuxt .git .github .vscode coverage playwright-report test-results .cursorrules .DS_Store DEPLOYMENT.md CHANGELOG.md README.md playwright.config.ts package.json package-lock.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc .editorconfig renovate.json eslint.config.mjs tsconfig.json nuxt.config.ts app reshot-icon-emotion-WYMLSU5D4V.svg
 
 # Add and commit all changes (including deletions)
 echo "💾 Committing changes..."
