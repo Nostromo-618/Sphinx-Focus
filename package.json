@@ -1,11 +1,10 @@
 {
-  "name": "sphinx-focus",
-  "version": "3.0.0",
+  "name": "sfocus-nuxtui",
+  "version": "2.3",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "generate": "nuxt generate",
     "dev": "nuxt dev",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
