@@ -17,8 +17,10 @@ pnpm install
 echo "🔨 Generating static site..."
 pnpm run generate
 
-# Store the output path
-OUTPUT_DIR="$(pwd)/.output/public"
+# Store the output in a temp location BEFORE switching branches
+echo "📦 Storing generated files in temp location..."
+TEMP_DIR=$(mktemp -d)
+cp -r .output/public/* "$TEMP_DIR/"
 
 # Switch to gh-pages
 echo "🔀 Switching to gh-pages branch..."
@@ -29,9 +31,10 @@ echo "📋 Cleaning gh-pages branch..."
 git rm -rf . 2>/dev/null || true
 git clean -fd 2>/dev/null || true
 
-# Copy generated files
+# Copy generated files from temp
 echo "📁 Copying generated files..."
-cp -r "$OUTPUT_DIR"/* .
+cp -r "$TEMP_DIR"/* .
+rm -rf "$TEMP_DIR"
 
 # Add and commit all changes
 echo "💾 Committing changes..."
