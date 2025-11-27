@@ -141,69 +141,58 @@ function cancelClearData() {
       </template>
     </UModal>
 
-    <!-- Main App Content (only shown when security is ready) -->
-    <template v-if="appReady">
-      <UHeader>
-        <template #left>
-          <NuxtLink
-            to="/"
-            class="font-semibold text-lg"
-          >
-            Sphinx Focus
-          </NuxtLink>
-        </template>
+    <!-- Main App Content -->
+    <UHeader v-if="appReady">
+      <template #left>
+        <NuxtLink
+          to="/"
+          class="font-semibold text-lg"
+        >
+          Sphinx Focus
+        </NuxtLink>
+      </template>
 
-        <template #right>
-          <VersionButton />
+      <template #right>
+        <VersionButton />
 
-          <ColorModeButton />
+        <ColorModeButton />
 
-          <SecurityButton
-            @lock="handleLock"
-            @change-mode="handleChangeMode"
-            @clear-data="handleClearData"
-          />
-
-          <UButton
-            to="https://github.com/Nostromo-618/sfocus.app"
-            target="_blank"
-            icon="i-simple-icons-github"
-            aria-label="GitHub"
-            color="neutral"
-            variant="ghost"
-          />
-        </template>
-      </UHeader>
-
-      <UMain>
-        <NuxtPage />
-      </UMain>
-
-      <USeparator icon="i-simple-icons-nuxtdotjs" />
-
-      <UFooter>
-        <template #left>
-          <p class="text-sm text-muted">
-            Sphinx Focus • © {{ new Date().getFullYear() }}
-          </p>
-        </template>
-      </UFooter>
-    </template>
-
-    <!-- Loading state while checking security -->
-    <div
-      v-else-if="!showSetupModal && !showPINModal"
-      class="min-h-screen flex items-center justify-center"
-    >
-      <div class="flex flex-col items-center gap-4">
-        <UIcon
-          name="i-lucide-loader-2"
-          class="size-8 text-primary animate-spin"
+        <SecurityButton
+          @lock="handleLock"
+          @change-mode="handleChangeMode"
+          @clear-data="handleClearData"
         />
-        <p class="text-muted">
-          Loading...
-        </p>
+
+        <UButton
+          to="https://github.com/Nostromo-618/sfocus.app"
+          target="_blank"
+          icon="i-simple-icons-github"
+          aria-label="GitHub"
+          color="neutral"
+          variant="ghost"
+        />
+      </template>
+    </UHeader>
+
+    <UMain>
+      <div v-show="appReady">
+        <NuxtPage />
       </div>
-    </div>
+      <div
+        v-if="!appReady && !showSetupModal && !showPINModal"
+        class="absolute inset-0 min-h-screen flex items-center justify-center bg-background"
+      >
+        <div class="flex flex-col items-center gap-4">
+          <UIcon
+            name="i-lucide-loader-2"
+            class="size-8 text-primary animate-spin"
+          />
+          <p class="text-muted">
+            Loading...
+          </p>
+        </div>
+      </div>
+    </UMain>
+
   </UApp>
 </template>

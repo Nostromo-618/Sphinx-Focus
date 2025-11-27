@@ -18,12 +18,13 @@ const _SESSION_KEY_SYMBOL = Symbol('sessionKey')
 // In-memory session key (never persisted for PIN mode)
 let sessionKey: CryptoKey | null = null
 
+// Shared reactive state (module-level so all components share the same state)
+const isInitialized = ref(false)
+const isUnlocked = ref(false)
+const currentMode = ref<SecurityMode>('none')
+
 export function useSecuritySettings() {
   const { generateSalt, generateKey, deriveKeyFromPIN, exportKey, importKey, encrypt, decrypt, uint8ArrayToBase64, base64ToUint8Array } = useEncryption()
-
-  const isInitialized = ref(false)
-  const isUnlocked = ref(false)
-  const currentMode = ref<SecurityMode>('none')
 
   /**
    * Load security configuration from localStorage

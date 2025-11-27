@@ -179,6 +179,11 @@ function handleKeyPress(event: KeyboardEvent) {
     addTask()
   }
 }
+
+// Expose tasks for parent component
+defineExpose({
+  tasks
+})
 </script>
 
 <template>

@@ -5,6 +5,15 @@ const REST_DURATION = 5 * 60 // 5 minutes in seconds
 type TimerMode = 'focus' | 'rest'
 type TimerState = 'idle' | 'running' | 'paused'
 
+const TIMER_STORAGE_KEY = 'sphinx-focus-timer'
+
+interface StoredTimerState {
+  mode: TimerMode
+  state: TimerState
+  timeRemaining: number
+  lastUpdateTimestamp: number // Unix timestamp in milliseconds
+}
+
 const mode = ref<TimerMode>('focus')
 const state = ref<TimerState>('idle')
 const timeRemaining = ref(FOCUS_DURATION)
@@ -13,11 +22,98 @@ const showCompletionBanner = ref(false)
 
 const toast = useToast()
 
-// Request notification permission on mount
+// Save timer state to localStorage
+function saveTimerState() {
+  if (import.meta.server) return
+
+  const timerState: StoredTimerState = {
+    mode: mode.value,
+    state: state.value,
+    timeRemaining: timeRemaining.value,
+    lastUpdateTimestamp: Date.now()
+  }
+
+  try {
+    localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(timerState))
+  } catch (error) {
+    console.error('Failed to save timer state:', error)
+  }
+}
+
+// Load timer state from localStorage and resume if needed
+function loadTimerState() {
+  if (import.meta.server) return
+
+  try {
+    const stored = localStorage.getItem(TIMER_STORAGE_KEY)
+    if (!stored) return
+
+    const timerState = JSON.parse(stored) as StoredTimerState
+
+    // Validate stored data
+    if (
+      !timerState ||
+      typeof timerState.mode !== 'string' ||
+      typeof timerState.state !== 'string' ||
+      typeof timerState.timeRemaining !== 'number' ||
+      typeof timerState.lastUpdateTimestamp !== 'number'
+    ) {
+      // Invalid data - clear and start fresh
+      localStorage.removeItem(TIMER_STORAGE_KEY)
+      return
+    }
+
+    // Restore mode and state
+    mode.value = timerState.mode
+    state.value = timerState.state
+
+    // If timer was running, calculate elapsed time
+    if (timerState.state === 'running') {
+      const now = Date.now()
+      const elapsed = Math.floor((now - timerState.lastUpdateTimestamp) / 1000) // elapsed seconds
+      const adjustedTimeRemaining = timerState.timeRemaining - elapsed
+
+      if (adjustedTimeRemaining <= 0) {
+        // Timer expired while page was closed - complete the session
+        timeRemaining.value = 0
+        completeSession()
+        return
+      } else {
+        // Timer still has time - restore and resume
+        timeRemaining.value = adjustedTimeRemaining
+        state.value = 'running'
+        // Start the interval again
+        intervalId.value = setInterval(() => {
+          if (timeRemaining.value > 0) {
+            timeRemaining.value--
+            saveTimerState() // Save every second
+          } else {
+            completeSession()
+          }
+        }, 1000)
+      }
+    } else {
+      // Timer was paused or idle - just restore the time
+      timeRemaining.value = timerState.timeRemaining
+    }
+  } catch (error) {
+    // Corrupted data - clear and start fresh
+    console.error('Failed to load timer state:', error)
+    localStorage.removeItem(TIMER_STORAGE_KEY)
+  }
+}
+
+// Watch for state changes and save
+watch([mode, state], () => {
+  saveTimerState()
+}, { immediate: false })
+
+// Request notification permission on mount and load timer state
 onMounted(() => {
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission()
   }
+  loadTimerState()
 })
 
 // Play a gentle notification sound using Web Audio API
@@ -97,9 +193,11 @@ function startTimer() {
   }
 
   state.value = 'running'
+  saveTimerState() // Save immediately when starting
   intervalId.value = setInterval(() => {
     if (timeRemaining.value > 0) {
       timeRemaining.value--
+      saveTimerState() // Save every second
     } else {
       completeSession()
     }
@@ -112,12 +210,17 @@ function pauseTimer() {
     intervalId.value = null
   }
   state.value = 'paused'
+  saveTimerState() // Save when paused
 }
 
 function resetTimer() {
   pauseTimer()
   state.value = 'idle'
   timeRemaining.value = totalTime.value
+  // Clear localStorage when reset to idle
+  if (!import.meta.server) {
+    localStorage.removeItem(TIMER_STORAGE_KEY)
+  }
 }
 
 function switchMode() {
@@ -132,6 +235,7 @@ function switchMode() {
   }
 
   state.value = 'idle'
+  saveTimerState() // Save when mode changes
 }
 
 function completeSession() {
@@ -159,6 +263,14 @@ onUnmounted(() => {
   if (intervalId.value) {
     clearInterval(intervalId.value)
   }
+})
+
+// Expose state for parent component
+defineExpose({
+  mode,
+  state,
+  timeRemaining,
+  formattedTime
 })
 </script>
 
@@ -241,7 +353,6 @@ onUnmounted(() => {
         @click="startTimer"
       />
       <UButton
-        v-if="state === 'running' || state === 'paused'"
         label="Skip"
         icon="i-lucide-skip-forward"
         color="neutral"
