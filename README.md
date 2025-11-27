@@ -1,60 +1,79 @@
-# Nuxt Starter Template
+# Sphinx Focus
 
-[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
+**Pure Focus. No strings attached.**
 
-Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
+A minimalist Pomodoro timer and task manager to help you stay focused and productive. Built with Nuxt UI.
 
-- [Live demo](https://starter-template.nuxt.dev/)
-- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+## Features
 
-<a href="https://starter-template.nuxt.dev/" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-  </picture>
-</a>
-
-> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
+- 🍅 **Pomodoro Timer** - 25-minute focus sessions with 5-minute breaks
+- ✅ **Task Management** - Organize and track your tasks
+- 🔒 **Privacy First** - Optional PIN protection with encrypted local storage
+- 🌓 **Dark Mode** - Beautiful light and dark themes
+- 📱 **Responsive** - Works seamlessly on desktop and mobile
+- ⚡ **Fast** - Built with Nuxt 4 and optimized for performance
 
 ## Quick Start
 
-```bash [Terminal]
-npm create nuxt@latest -- -t github:nuxt-ui-templates/starter
-```
+### Prerequisites
 
-## Deploy your own
+- Node.js 18+ 
+- pnpm (recommended) or npm
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
-
-## Setup
-
-Make sure to install the dependencies:
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/Nostromo-618/sfocus.app.git
+cd sphinx-focus
+
+# Install dependencies
 pnpm install
-```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
+# Start development server
 pnpm dev
 ```
 
-## Production
+Visit `http://localhost:3000` to see the app.
 
-Build the application for production:
+## Development
 
 ```bash
+# Development server
+pnpm dev
+
+# Build for production
 pnpm build
+
+# Preview production build
+pnpm preview
+
+# Generate static site
+pnpm generate
 ```
 
-Locally preview production build:
+## Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+Quick deploy to GitHub Pages:
 
 ```bash
-pnpm preview
+./deploy.sh
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+## Tech Stack
+
+- [Nuxt 4](https://nuxt.com/) - Vue.js framework
+- [Nuxt UI](https://ui.nuxt.com/) - UI component library
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
+- [Tailwind CSS](https://tailwindcss.com/) - Styling
+
+## License
+
+MIT
+
+## Links
+
+- **Live Site**: https://sfocus.app/
+- **GitHub**: https://github.com/Nostromo-618/sfocus.app

@@ -36,6 +36,11 @@ echo "📁 Copying generated files..."
 cp -r "$TEMP_DIR"/* .
 rm -rf "$TEMP_DIR"
 
+# Create .nojekyll file to prevent Jekyll processing
+# This is required for GitHub Pages to serve files/directories starting with underscores
+echo "📝 Creating .nojekyll file..."
+touch .nojekyll
+
 # Add and commit all changes
 echo "💾 Committing changes..."
 git add -A

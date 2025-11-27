@@ -276,13 +276,15 @@ Use the provided deployment script:
 
 The script will:
 1. ✅ Ensure you're on the main branch
-2. 🔨 Build the project (`npm run build`)
-3. 🔀 Switch to gh-pages branch
-4. 📋 Copy all built files to root (index.html, styles.css, app.js, favicon.ico, fonts/, media/, services/)
-5. 🧹 Remove development files (package.json, node_modules, tests, docs, etc.) - keeps only runtime files
-6. 💾 Commit changes with timestamp
-7. ⬆️ Push to GitHub
-8. 🔙 Return to main branch
+2. 📦 Install dependencies
+3. 🔨 Generate static site (`pnpm run generate`)
+4. 🔀 Switch to gh-pages branch
+5. 📋 Clean gh-pages branch (remove all tracked files)
+6. 📁 Copy all generated files from `.output/public/` to root
+7. 📝 Create `.nojekyll` file (required for GitHub Pages to serve `_nuxt`, `_fonts`, etc.)
+8. 💾 Commit changes with timestamp
+9. ⬆️ Push to GitHub
+10. 🔙 Return to main branch
 
 **Note:** The deploy script is already executable. If you need to make it executable again:
 ```bash
@@ -387,6 +389,7 @@ After running `./deploy.sh`:
 7. **⚠️ CRITICAL: Files must be in ROOT of gh-pages** - GitHub Pages serves from `/`, not `/dist/`
 8. **All assets must be copied** - Don't forget favicon.ico, fonts/, media/, and services/
 9. **Deploy only from main** - The deploy.sh script enforces this requirement
+10. **⚠️ CRITICAL: `.nojekyll` file is required** - GitHub Pages uses Jekyll by default, which ignores files/directories starting with underscores (like `_nuxt`, `_fonts`, `_payload.json`). The `.nojekyll` file disables Jekyll processing. The deploy script creates this automatically.
 
 ---
 
@@ -394,24 +397,29 @@ After running `./deploy.sh`:
 
 ### Changes not appearing on GitHub Pages
 
-**Most common issue:** Files were only updated in `dist/` but not copied to the ROOT of gh-pages branch.
+**Most common issues:**
 
-**Solution:**
-```bash
-git checkout gh-pages
-# Verify files are in root, not in dist/
-ls -la index.html styles.css app.js favicon.ico
-# If they're missing or outdated, copy from main
-git show main:index.html > index.html
-git show main:styles.css > styles.css
-git show main:app.js > app.js
-git show main:favicon.ico > favicon.ico
-git checkout main -- fonts/ media/ services/
-git add -A
-git commit -m "Fix: Copy files to root"
-git push origin gh-pages
-git checkout main
-```
+1. **Missing `.nojekyll` file** - If `_nuxt`, `_fonts`, or other underscore-prefixed files/directories aren't loading, GitHub Pages is likely processing them with Jekyll. Create a `.nojekyll` file:
+   ```bash
+   git checkout gh-pages
+   touch .nojekyll
+   git add .nojekyll
+   git commit -m "Add .nojekyll file"
+   git push origin gh-pages
+   git checkout main
+   ```
+
+2. **Files not in root** - Files were only updated in `dist/` but not copied to the ROOT of gh-pages branch.
+
+   **Solution:**
+   ```bash
+   git checkout gh-pages
+   # Verify files are in root, not in dist/
+   ls -la index.html
+   # If they're missing or outdated, redeploy from main
+   git checkout main
+   ./deploy.sh
+   ```
 
 **Other causes:**
 - GitHub Pages may take 2-5 minutes to update
