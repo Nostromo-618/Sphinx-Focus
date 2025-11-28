@@ -56,5 +56,5 @@ git checkout main
 
 echo ""
 echo "✅ Deployment complete!"
-echo "🌐 Your site will be updated at: https://nostromo-618.github.io/sphinx-focus/"
+echo "🌐 Your site will be updated at: https://sfocus.app"
 echo "⏱️  GitHub Pages may take a few minutes to reflect the changes."

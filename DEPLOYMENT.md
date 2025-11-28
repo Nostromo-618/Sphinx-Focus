@@ -128,7 +128,7 @@ The project uses a structured branching workflow:
 GitHub Pages is configured to deploy from:
 - **Branch:** `gh-pages`
 - **Folder:** `/ (root)`
-- **URL:** https://nostromo-618.github.io/sphinx-focus/
+- **URL:** https://sfocus.app
 
 ---
 
@@ -235,7 +235,7 @@ GitHub Pages is configured to deploy from:
 
 2. **Verify deployment:**
    - Wait 2-5 minutes for GitHub Pages to update
-   - Visit https://nostromo-618.github.io/sphinx-focus/
+   - Visit https://sfocus.app
    - Test the deployed version
 
 ### Branch Cleanup (REQUIRED)
@@ -373,7 +373,7 @@ Open http://localhost:8080 to verify the built version.
 
 After running `./deploy.sh`:
 - Wait 2-5 minutes for GitHub Pages to update
-- Visit https://nostromo-618.github.io/sphinx-focus/
+- Visit https://sfocus.app
 - Test all functionality in the live environment
 
 ---
