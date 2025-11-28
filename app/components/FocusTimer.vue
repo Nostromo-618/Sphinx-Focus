@@ -1,6 +1,89 @@
 <script setup lang="ts">
-const FOCUS_DURATION = 25 * 60 // 25 minutes in seconds
-const REST_DURATION = 5 * 60 // 5 minutes in seconds
+const FOCUS_DURATION_KEY = 'sphinx-focus-focus-duration'
+const REST_DURATION_KEY = 'sphinx-focus-rest-duration'
+const BLUR_MODE_KEY = 'sphinx-focus-blur-mode'
+
+// Load settings from localStorage
+function loadFocusDuration(): number {
+  if (import.meta.server) return 25 * 60
+  try {
+    const stored = localStorage.getItem(FOCUS_DURATION_KEY)
+    const value = stored ? parseInt(stored, 10) : 25
+    const minutes = isNaN(value) || value < 1 || value > 99 ? 25 : value
+    return minutes * 60
+  } catch {
+    return 25 * 60
+  }
+}
+
+function loadRestDuration(): number {
+  if (import.meta.server) return 5 * 60
+  try {
+    const stored = localStorage.getItem(REST_DURATION_KEY)
+    const value = stored ? parseInt(stored, 10) : 5
+    const minutes = isNaN(value) || value < 1 || value > 99 ? 5 : value
+    return minutes * 60
+  } catch {
+    return 5 * 60
+  }
+}
+
+function loadBlurMode(): boolean {
+  if (import.meta.server) return true
+  try {
+    const stored = localStorage.getItem(BLUR_MODE_KEY)
+    return stored !== null ? stored === 'true' : true // Default: enabled
+  } catch {
+    return true
+  }
+}
+
+// Reactive durations that update when settings change
+const focusDuration = ref(loadFocusDuration())
+const restDuration = ref(loadRestDuration())
+const blurModeEnabled = ref(loadBlurMode())
+
+// Watch for settings changes in localStorage (from settings modal)
+if (!import.meta.server) {
+  const checkSettings = () => {
+    const newFocusDuration = loadFocusDuration()
+    const newRestDuration = loadRestDuration()
+    const newBlurMode = loadBlurMode()
+
+    // Blur mode can be updated immediately
+    blurModeEnabled.value = newBlurMode
+
+    // Durations only update if timer is idle (apply to next session)
+    if (state.value === 'idle') {
+      focusDuration.value = newFocusDuration
+      restDuration.value = newRestDuration
+      // Update time remaining if we're in the corresponding mode
+      if (mode.value === 'focus') {
+        timeRemaining.value = focusDuration.value
+      } else if (mode.value === 'rest') {
+        timeRemaining.value = restDuration.value
+      }
+    }
+  }
+
+  // Check for settings changes periodically
+  const settingsCheckInterval = setInterval(() => {
+    checkSettings()
+  }, 500)
+
+  // Also listen for storage events (when settings modal saves)
+  const handleStorageChange = (e: StorageEvent) => {
+    if (e.key === FOCUS_DURATION_KEY || e.key === REST_DURATION_KEY || e.key === BLUR_MODE_KEY) {
+      checkSettings()
+    }
+  }
+  window.addEventListener('storage', handleStorageChange)
+
+  onUnmounted(() => {
+    clearInterval(settingsCheckInterval)
+    window.removeEventListener('storage', handleStorageChange)
+  })
+}
 
 type TimerMode = 'focus' | 'rest'
 type TimerState = 'idle' | 'running' | 'paused'
@@ -16,7 +99,7 @@ interface StoredTimerState {
 
 const mode = ref<TimerMode>('focus')
 const state = ref<TimerState>('idle')
-const timeRemaining = ref(FOCUS_DURATION)
+const timeRemaining = ref(focusDuration.value)
 const intervalId = ref<ReturnType<typeof setInterval> | null>(null)
 const showCompletionBanner = ref(false)
 
@@ -122,7 +205,7 @@ watch(isUnlocked, (unlocked, wasUnlocked) => {
     // Reset timer to default state
     mode.value = 'focus'
     state.value = 'idle'
-    timeRemaining.value = FOCUS_DURATION
+    timeRemaining.value = focusDuration.value
     showCompletionBanner.value = false
   }
 })
@@ -180,7 +263,7 @@ function showToastNotification(completedMode: TimerMode) {
 }
 
 const totalTime = computed(() => {
-  return mode.value === 'focus' ? FOCUS_DURATION : REST_DURATION
+  return mode.value === 'focus' ? focusDuration.value : restDuration.value
 })
 
 const progress = computed(() => {
@@ -247,10 +330,10 @@ function switchMode() {
 
   if (mode.value === 'focus') {
     mode.value = 'rest'
-    timeRemaining.value = REST_DURATION
+    timeRemaining.value = restDuration.value
   } else {
     mode.value = 'focus'
-    timeRemaining.value = FOCUS_DURATION
+    timeRemaining.value = focusDuration.value
   }
 
   state.value = 'idle'
@@ -289,7 +372,8 @@ defineExpose({
   mode,
   state,
   timeRemaining,
-  formattedTime
+  formattedTime,
+  blurModeEnabled
 })
 </script>
 

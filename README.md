@@ -1,7 +1,5 @@
 # Sphinx Focus
 
-**Pure Focus. No strings attached.**
-
 A minimalist Pomodoro timer and task manager to help you stay focused and productive. Built with Nuxt UI.
 
 ## Features
