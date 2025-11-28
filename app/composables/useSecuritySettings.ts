@@ -195,6 +195,11 @@ export function useSecuritySettings() {
     // Clear timer state
     localStorage.removeItem('sphinx-focus-timer')
 
+    // Clear timer settings
+    localStorage.removeItem('sphinx-focus-focus-duration')
+    localStorage.removeItem('sphinx-focus-rest-duration')
+    localStorage.removeItem('sphinx-focus-blur-mode')
+
     // Reset state
     sessionKey = null
     isInitialized.value = false

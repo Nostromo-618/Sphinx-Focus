@@ -5,7 +5,6 @@ useHead({
   ],
   link: [
     { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-    { rel: 'icon', type: 'image/png', href: '/favicon.png' },
     { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
   ],
   htmlAttrs: {
@@ -172,7 +171,7 @@ function cancelClearData() {
           />
 
           <UButton
-            to="https://github.com/Nostromo-618/sfocus.app"
+            to="https://github.com/Nostromo-618/Sphinx-Focus"
             target="_blank"
             icon="i-simple-icons-github"
             aria-label="GitHub"
@@ -195,7 +194,7 @@ function cancelClearData() {
           />
 
           <UButton
-            to="https://github.com/Nostromo-618/sfocus.app"
+            to="https://github.com/Nostromo-618/Sphinx-Focus"
             target="_blank"
             icon="i-simple-icons-github"
             aria-label="GitHub"

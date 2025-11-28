@@ -22,7 +22,7 @@ A minimalist Pomodoro timer and task manager to help you stay focused and produc
 
 ```bash
 # Clone the repository
-git clone https://github.com/Nostromo-618/sfocus.app.git
+git clone https://github.com/Nostromo-618/Sphinx-Focus.git
 cd sphinx-focus
 
 # Install dependencies
@@ -63,4 +63,4 @@ MIT
 ## Links
 
 - **Live Site**: https://sfocus.app/
-- **GitHub**: https://github.com/Nostromo-618/sfocus.app
+- **GitHub**: https://github.com/Nostromo-618/Sphinx-Focus

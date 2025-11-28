@@ -423,9 +423,16 @@ defineExpose({
 
       <!-- Time display in center -->
       <div class="absolute inset-0 flex flex-col items-center justify-center">
-        <div class="text-4xl font-bold text-highlighted mb-1">
-          {{ formattedTime }}
-        </div>
+        <ClientOnly>
+          <div class="text-4xl font-bold text-highlighted mb-1">
+            {{ formattedTime }}
+          </div>
+          <template #fallback>
+            <div class="text-4xl font-bold text-highlighted mb-1">
+              25:00
+            </div>
+          </template>
+        </ClientOnly>
         <div class="text-sm text-muted">
           {{ modeLabel }}
         </div>

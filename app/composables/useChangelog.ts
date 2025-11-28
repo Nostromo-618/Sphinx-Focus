@@ -12,6 +12,28 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.0.5',
+    date: '2025-11-29',
+    changes: {
+      added: [
+        'Timer Settings modal with focus/rest duration configuration',
+        'Blur mode toggle in timer settings'
+      ],
+      fixed: [
+        'Fixed Timer Settings modal not opening (missing component)',
+        'Fixed favicon 404 error (removed non-existent favicon.png reference)',
+        'Fixed hydration mismatch warning for timer display',
+        'Fixed missing USwitch component in Timer Settings modal',
+        'Fixed accessibility warnings for Timer Settings dialog',
+        'Clear All Data now removes all app data including timer settings'
+      ],
+      changed: [
+        'Improved build configuration with chunk splitting for better performance',
+        'Disabled production sourcemaps to reduce build warnings'
+      ]
+    }
+  },
+  {
     version: '2.0.4',
     date: '2025-11-29',
     changes: {
@@ -31,7 +53,7 @@ export const changelogData: ChangelogEntry[] = [
   },
   {
     version: '2.0.3',
-    date: '2025-11-28',
+    date: '2025-11-29',
     changes: {
       fixed: [
         'Fixed hamburger menu hiding page content by switching to slideover mode',
@@ -75,7 +97,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.0.4',
+    getLatestVersion: () => changelogData[0]?.version || '2.0.5',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }
