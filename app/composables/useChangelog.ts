@@ -12,6 +12,16 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.0.2',
+    date: '2025-12-01',
+    changes: {
+      fixed: [
+        'Tasks now clear immediately when "Clear All Data" is clicked (no page refresh needed)',
+        'Timer now resets to default state when "Clear All Data" is clicked'
+      ]
+    }
+  },
+  {
     version: '2.0.1',
     date: '2025-11-29',
     changes: {
@@ -35,7 +45,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.0.1',
+    getLatestVersion: () => changelogData[0]?.version || '2.0.2',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }

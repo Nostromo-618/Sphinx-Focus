@@ -192,6 +192,9 @@ export function useSecuritySettings() {
     localStorage.removeItem('sphinx-focus-tasks')
     localStorage.removeItem('sphinx-focus-tasks-encrypted')
 
+    // Clear timer state
+    localStorage.removeItem('sphinx-focus-timer')
+
     // Reset state
     sessionKey = null
     isInitialized.value = false

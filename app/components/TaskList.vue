@@ -21,6 +21,9 @@ const isLoading = ref(true)
 watch(isUnlocked, async (unlocked) => {
   if (unlocked) {
     await loadTasks()
+  } else {
+    // Clear tasks when locked/cleared
+    tasks.value = []
   }
 }, { immediate: true })
 

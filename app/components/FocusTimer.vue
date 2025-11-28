@@ -21,6 +21,7 @@ const intervalId = ref<ReturnType<typeof setInterval> | null>(null)
 const showCompletionBanner = ref(false)
 
 const toast = useToast()
+const { isUnlocked } = useSecuritySettings()
 
 // Save timer state to localStorage
 function saveTimerState() {
@@ -107,6 +108,24 @@ function loadTimerState() {
 watch([mode, state], () => {
   saveTimerState()
 }, { immediate: false })
+
+// Reset timer when data is cleared (isUnlocked becomes false)
+watch(isUnlocked, (unlocked, wasUnlocked) => {
+  // Only reset if transitioning from unlocked to locked (data cleared)
+  // wasUnlocked will be undefined on first run, so we check if it was previously true
+  if (wasUnlocked === true && !unlocked) {
+    // Clear any running interval
+    if (intervalId.value) {
+      clearInterval(intervalId.value)
+      intervalId.value = null
+    }
+    // Reset timer to default state
+    mode.value = 'focus'
+    state.value = 'idle'
+    timeRemaining.value = FOCUS_DURATION
+    showCompletionBanner.value = false
+  }
+})
 
 // Request notification permission on mount and load timer state
 onMounted(() => {
