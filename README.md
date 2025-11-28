@@ -51,17 +51,6 @@ pnpm preview
 # Generate static site
 pnpm generate
 ```
-
-## Deployment
-
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
-
-Quick deploy to GitHub Pages:
-
-```bash
-./deploy.sh
-```
-
 ## Tech Stack
 
 - [Nuxt 4](https://nuxt.com/) - Vue.js framework

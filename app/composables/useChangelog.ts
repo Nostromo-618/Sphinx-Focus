@@ -13,7 +13,7 @@ export interface ChangelogEntry {
 export const changelogData: ChangelogEntry[] = [
   {
     version: '2.0.2',
-    date: '2025-12-01',
+    date: '2025-11-29',
     changes: {
       fixed: [
         'Tasks now clear immediately when "Clear All Data" is clicked (no page refresh needed)',
