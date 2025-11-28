@@ -5,6 +5,7 @@ useHead({
   ],
   link: [
     { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+    { rel: 'icon', type: 'image/png', href: '/favicon.png' },
     { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
   ],
   htmlAttrs: {
@@ -109,6 +110,7 @@ function cancelClearData() {
     <UModal
       v-model:open="showClearConfirm"
       title="Clear All Data?"
+      :ui="{ overlay: 'z-[100]', content: 'z-[101]' }"
     >
       <template #body>
         <div class="space-y-4">
@@ -144,7 +146,8 @@ function cancelClearData() {
     <!-- Main App Content -->
     <UHeader
       v-if="appReady"
-      mode="slideover"
+      mode="drawer"
+      :menu="{ side: 'right', overlay: false }"
       :ui="{ toggle: 'sm:hidden' }"
     >
       <template #left>

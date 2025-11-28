@@ -107,7 +107,7 @@ onMounted(() => {
   <UModal
     :open="true"
     :close="false"
-    :ui="{ content: 'sm:max-w-md' }"
+    :ui="{ content: 'sm:max-w-md z-[101]', overlay: 'z-[100]' }"
   >
     <template #header>
       <!-- Reset Confirmation Header -->

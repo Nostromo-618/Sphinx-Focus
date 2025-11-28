@@ -102,7 +102,7 @@ function goBack() {
   <UModal
     :open="true"
     :close="false"
-    :ui="{ content: 'sm:max-w-lg' }"
+    :ui="{ content: 'sm:max-w-lg z-[101]', overlay: 'z-[100]' }"
   >
     <template #header>
       <!-- Mode Selection Header -->

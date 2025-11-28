@@ -12,8 +12,26 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
-    version: '2.0.3',
+    version: '2.0.4',
     date: '2025-11-29',
+    changes: {
+      added: [
+        'Timer title now displays active task name and turns green during focus sessions',
+        'Blur mode to minimize distractions during focus sessions (blurs everything except timer)',
+        'Timer Settings modal with customizable focus and rest intervals (1-99 minutes)',
+        'Settings button (cogwheel) in timer card header for quick access to settings',
+        'Blur mode toggle in settings (enabled by default)',
+        'Settings persist across browser sessions'
+      ],
+      fixed: [
+        'Replaced full-screen slideover menu with compact drawer menu for better mobile UX',
+        'Fixed security dialog being overlapped by header overlay on mobile devices'
+      ]
+    }
+  },
+  {
+    version: '2.0.3',
+    date: '2025-11-28',
     changes: {
       fixed: [
         'Fixed hamburger menu hiding page content by switching to slideover mode',
@@ -57,7 +75,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.0.3',
+    getLatestVersion: () => changelogData[0]?.version || '2.0.4',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }
