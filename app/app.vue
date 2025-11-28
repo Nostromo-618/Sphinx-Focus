@@ -142,7 +142,11 @@ function cancelClearData() {
     </UModal>
 
     <!-- Main App Content -->
-    <UHeader v-if="appReady">
+    <UHeader
+      v-if="appReady"
+      mode="slideover"
+      :ui="{ toggle: 'sm:hidden' }"
+    >
       <template #left>
         <NuxtLink
           to="/"
@@ -153,24 +157,49 @@ function cancelClearData() {
       </template>
 
       <template #right>
-        <VersionButton />
+        <div class="hidden sm:flex items-center gap-1.5">
+          <VersionButton />
 
-        <ColorModeButton />
+          <ColorModeButton />
 
-        <SecurityButton
-          @lock="handleLock"
-          @change-mode="handleChangeMode"
-          @clear-data="handleClearData"
-        />
+          <SecurityButton
+            @lock="handleLock"
+            @change-mode="handleChangeMode"
+            @clear-data="handleClearData"
+          />
 
-        <UButton
-          to="https://github.com/Nostromo-618/sfocus.app"
-          target="_blank"
-          icon="i-simple-icons-github"
-          aria-label="GitHub"
-          color="neutral"
-          variant="ghost"
-        />
+          <UButton
+            to="https://github.com/Nostromo-618/sfocus.app"
+            target="_blank"
+            icon="i-simple-icons-github"
+            aria-label="GitHub"
+            color="neutral"
+            variant="ghost"
+          />
+        </div>
+      </template>
+
+      <template #body>
+        <div class="flex flex-col gap-2">
+          <VersionButton />
+
+          <ColorModeButton />
+
+          <SecurityButton
+            @lock="handleLock"
+            @change-mode="handleChangeMode"
+            @clear-data="handleClearData"
+          />
+
+          <UButton
+            to="https://github.com/Nostromo-618/sfocus.app"
+            target="_blank"
+            icon="i-simple-icons-github"
+            aria-label="GitHub"
+            color="neutral"
+            variant="ghost"
+          />
+        </div>
       </template>
     </UHeader>
 

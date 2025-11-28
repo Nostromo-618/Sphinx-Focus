@@ -45,9 +45,8 @@ const documentTitle = computed(() => {
     return `${modeLabel} - ${timer.formattedTime}`
   }
 
-  // Idle state - show mode without timer
-  const modeLabel = timer.mode === 'focus' ? 'FOCUS' : 'REST'
-  return modeLabel
+  // Idle state - return app name
+  return 'Sphinx Focus'
 })
 
 useHead({
