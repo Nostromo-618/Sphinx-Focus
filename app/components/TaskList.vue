@@ -195,11 +195,13 @@ defineExpose({
     <div class="flex gap-2">
       <UInput
         v-model="newTaskText"
+        data-testid="task-input"
         placeholder="Add a new task..."
         class="flex-1"
         @keypress="handleKeyPress"
       />
       <UButton
+        data-testid="task-add"
         label="Add"
         icon="i-lucide-plus"
         :disabled="!newTaskText.trim()"
@@ -223,6 +225,7 @@ defineExpose({
       <div
         v-for="task in tasks"
         :key="task.id"
+        :data-testid="`task-item-${task.id}`"
         :draggable="true"
         class="flex items-center gap-3 p-3 rounded-lg border border-border bg-default hover:bg-elevated transition-colors cursor-move"
         :class="{
@@ -243,6 +246,7 @@ defineExpose({
 
         <!-- Checkbox -->
         <input
+          :data-testid="`task-checkbox-${task.id}`"
           type="checkbox"
           :checked="task.completed"
           class="size-5 rounded border-border text-primary focus:ring-primary cursor-pointer"
@@ -251,6 +255,7 @@ defineExpose({
 
         <!-- Task Text -->
         <span
+          :data-testid="`task-text-${task.id}`"
           class="flex-1 text-default"
           :class="{
             'line-through text-muted': task.completed
@@ -261,6 +266,7 @@ defineExpose({
 
         <!-- Delete Button -->
         <UButton
+          :data-testid="`task-delete-${task.id}`"
           icon="i-lucide-trash-2"
           color="error"
           variant="ghost"

@@ -136,11 +136,11 @@ function loadTimerState() {
 
     // Validate stored data
     if (
-      !timerState ||
-      typeof timerState.mode !== 'string' ||
-      typeof timerState.state !== 'string' ||
-      typeof timerState.timeRemaining !== 'number' ||
-      typeof timerState.lastUpdateTimestamp !== 'number'
+      !timerState
+      || typeof timerState.mode !== 'string'
+      || typeof timerState.state !== 'string'
+      || typeof timerState.timeRemaining !== 'number'
+      || typeof timerState.lastUpdateTimestamp !== 'number'
     ) {
       // Invalid data - clear and start fresh
       localStorage.removeItem(TIMER_STORAGE_KEY)
@@ -424,7 +424,10 @@ defineExpose({
       <!-- Time display in center -->
       <div class="absolute inset-0 flex flex-col items-center justify-center">
         <ClientOnly>
-          <div class="text-4xl font-bold text-highlighted mb-1">
+          <div
+            data-testid="timer-display"
+            class="text-4xl font-bold text-highlighted mb-1"
+          >
             {{ formattedTime }}
           </div>
           <template #fallback>
@@ -433,7 +436,10 @@ defineExpose({
             </div>
           </template>
         </ClientOnly>
-        <div class="text-sm text-muted">
+        <div
+          data-testid="timer-mode"
+          class="text-sm text-muted"
+        >
           {{ modeLabel }}
         </div>
       </div>
@@ -443,6 +449,7 @@ defineExpose({
     <div class="flex gap-2">
       <UButton
         v-if="state === 'idle'"
+        data-testid="timer-start"
         label="Start"
         icon="i-lucide-play"
         color="primary"
@@ -450,6 +457,7 @@ defineExpose({
       />
       <UButton
         v-else-if="state === 'running'"
+        data-testid="timer-pause"
         label="Pause"
         icon="i-lucide-pause"
         color="warning"
@@ -457,12 +465,14 @@ defineExpose({
       />
       <UButton
         v-else-if="state === 'paused'"
+        data-testid="timer-resume"
         label="Resume"
         icon="i-lucide-play"
         color="primary"
         @click="startTimer"
       />
       <UButton
+        data-testid="timer-skip"
         label="Skip"
         icon="i-lucide-skip-forward"
         color="neutral"
@@ -470,6 +480,7 @@ defineExpose({
         @click="skipSession"
       />
       <UButton
+        data-testid="timer-reset"
         label="Reset"
         icon="i-lucide-rotate-ccw"
         color="neutral"

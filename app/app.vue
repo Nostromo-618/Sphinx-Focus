@@ -224,6 +224,5 @@ function cancelClearData() {
         </div>
       </div>
     </UMain>
-
   </UApp>
 </template>

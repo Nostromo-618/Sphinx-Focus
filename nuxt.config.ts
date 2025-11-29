@@ -34,7 +34,7 @@ export default defineNuxtConfig({
       rollupOptions: {
         output: {
           manualChunks: {
-            'vendor': ['vue', 'vue-router']
+            vendor: ['vue', 'vue-router']
           }
         }
       }
@@ -50,4 +50,3 @@ export default defineNuxtConfig({
     }
   }
 })
-

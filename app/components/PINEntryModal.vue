@@ -184,6 +184,7 @@ onMounted(() => {
             v-for="i in 4"
             :key="`pin-${i}`"
             :ref="(el) => { if (el) pinInputs[i - 1] = el as HTMLInputElement }"
+            :data-testid="`unlock-pin-input-${i - 1}`"
             type="password"
             inputmode="numeric"
             maxlength="1"
@@ -227,6 +228,7 @@ onMounted(() => {
         <div class="text-center pt-2">
           <button
             type="button"
+            data-testid="forgot-pin-link"
             class="text-sm text-muted hover:text-primary transition-colors"
             @click="handleForgotPIN"
           >

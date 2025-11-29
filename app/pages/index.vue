@@ -1,9 +1,9 @@
 <script setup lang="ts">
-const focusTimerRef = ref<{ 
-  mode: 'focus' | 'rest', 
-  state: 'idle' | 'running' | 'paused',
-  timeRemaining: number,
-  formattedTime: string,
+const focusTimerRef = ref<{
+  mode: 'focus' | 'rest'
+  state: 'idle' | 'running' | 'paused'
+  timeRemaining: number
+  formattedTime: string
   blurModeEnabled: boolean
 } | null>(null)
 const taskListRef = ref<{ tasks: Array<{ id: string, text: string, completed: boolean, order: number }> } | null>(null)

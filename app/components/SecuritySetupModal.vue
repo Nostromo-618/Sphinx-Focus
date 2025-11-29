@@ -150,6 +150,7 @@ function goBack() {
         <!-- PIN Protected Option -->
         <button
           type="button"
+          data-testid="security-pin-option"
           class="group relative p-6 rounded-xl border-2 border-border bg-default hover:border-primary hover:bg-elevated transition-all duration-200 text-left"
           :disabled="isLoading"
           @click="selectPINMode"
@@ -196,6 +197,7 @@ function goBack() {
         <!-- Auto Key Option -->
         <button
           type="button"
+          data-testid="security-auto-option"
           class="group p-6 rounded-xl border-2 border-border bg-default hover:border-warning hover:bg-elevated transition-all duration-200 text-left"
           :disabled="isLoading"
           @click="selectAutoMode"
@@ -248,6 +250,7 @@ function goBack() {
               v-for="i in 4"
               :key="`pin-${i}`"
               :ref="(el) => { if (el) pinInputs[i - 1] = el as HTMLInputElement }"
+              :data-testid="`pin-input-${i - 1}`"
               type="password"
               inputmode="numeric"
               maxlength="1"
@@ -267,6 +270,7 @@ function goBack() {
               v-for="i in 4"
               :key="`confirm-${i}`"
               :ref="(el) => { if (el) confirmPinInputs[i - 1] = el as HTMLInputElement }"
+              :data-testid="`confirm-pin-input-${i - 1}`"
               type="password"
               inputmode="numeric"
               maxlength="1"
