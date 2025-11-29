@@ -12,6 +12,17 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.0.7',
+    date: '2025-11-29',
+    changes: {
+      added: [
+        'Task fade-away feature: completed tasks automatically fade out and delete after customizable duration (1-180 seconds, default 55)',
+        'Task Settings modal with fade duration configuration',
+        'Settings button in Task List header for quick access to task settings'
+      ]
+    }
+  },
+  {
     version: '2.0.6',
     date: '2025-11-29',
     changes: {
@@ -108,7 +119,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.0.6',
+    getLatestVersion: () => changelogData[0]?.version || '2.0.7',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }

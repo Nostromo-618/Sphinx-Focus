@@ -8,6 +8,7 @@ const focusTimerRef = ref<{
 } | null>(null)
 const taskListRef = ref<{ tasks: Array<{ id: string, text: string, completed: boolean, order: number }> } | null>(null)
 const showSettingsModal = ref(false)
+const showTaskSettingsModal = ref(false)
 
 const timerTitle = computed(() => {
   const timer = focusTimerRef.value
@@ -100,9 +101,20 @@ const isBlurred = computed(() => {
           }"
         >
           <template #header>
-            <h3 class="text-lg font-semibold">
-              Task List
-            </h3>
+            <div class="flex items-center justify-between w-full">
+              <h3 class="text-lg font-semibold">
+                Task List
+              </h3>
+              <UButton
+                data-testid="task-settings-button"
+                icon="i-lucide-settings"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                aria-label="Task settings"
+                @click="showTaskSettingsModal = true"
+              />
+            </div>
           </template>
           <TaskList ref="taskListRef" />
         </UCard>
@@ -121,6 +133,12 @@ const isBlurred = computed(() => {
     <TimerSettingsModal
       v-if="showSettingsModal"
       @close="showSettingsModal = false"
+    />
+
+    <!-- Task Settings Modal -->
+    <TaskSettingsModal
+      v-if="showTaskSettingsModal"
+      @close="showTaskSettingsModal = false"
     />
   </div>
 </template>

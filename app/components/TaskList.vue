@@ -1,12 +1,15 @@
 <script setup lang="ts">
 const STORAGE_KEY = 'sphinx-focus-tasks-encrypted'
+const FADE_DURATION_KEY = 'sphinx-focus-task-fade-duration'
 
 interface Task {
   id: string
   text: string
   completed: boolean
   order: number
+  completedAt?: number
 }
+
 
 const { encrypt, decrypt } = useEncryption()
 const { isUnlocked, hasSessionKey, getSessionKey } = useSecuritySettings()
@@ -16,6 +19,41 @@ const newTaskText = ref('')
 const draggedTaskId = ref<string | null>(null)
 const dragOverTaskId = ref<string | null>(null)
 const isLoading = ref(true)
+const fadeDuration = ref(55)
+const taskOpacities = ref<Record<string, number>>({})
+
+// Load fade duration from localStorage
+function loadFadeDuration(): number {
+  if (import.meta.server) return 55
+  try {
+    const stored = localStorage.getItem(FADE_DURATION_KEY)
+    const value = stored ? parseInt(stored, 10) : 55
+    return isNaN(value) || value < 1 || value > 180 ? 55 : value
+  } catch {
+    return 55
+  }
+}
+
+// Watch for fade duration changes
+function watchFadeDuration() {
+  if (import.meta.server) return
+  const handleStorageChange = (e: StorageEvent) => {
+    if (e.key === FADE_DURATION_KEY && e.newValue) {
+      const value = parseInt(e.newValue, 10)
+      if (!isNaN(value) && value >= 1 && value <= 180) {
+        fadeDuration.value = value
+      }
+    }
+  }
+  window.addEventListener('storage', handleStorageChange)
+  onUnmounted(() => {
+    window.removeEventListener('storage', handleStorageChange)
+  })
+}
+
+// Initialize fade duration
+fadeDuration.value = loadFadeDuration()
+watchFadeDuration()
 
 // Load tasks when unlocked
 watch(isUnlocked, async (unlocked) => {
@@ -24,6 +62,7 @@ watch(isUnlocked, async (unlocked) => {
   } else {
     // Clear tasks when locked/cleared
     tasks.value = []
+    taskOpacities.value = {}
   }
 }, { immediate: true })
 
@@ -39,8 +78,26 @@ async function loadTasks() {
     if (encrypted) {
       const key = getSessionKey()
       const decrypted = await decrypt(encrypted, key)
-      tasks.value = JSON.parse(decrypted)
+      const loadedTasks = JSON.parse(decrypted) as Task[]
+      tasks.value = loadedTasks
+      
+      // Initialize opacities for completed tasks that don't have completedAt
+      // (for backward compatibility with existing tasks)
+      loadedTasks.forEach((task) => {
+        if (task.completed && !task.completedAt) {
+          // Set completedAt to now for tasks that were already completed
+          // This will make them start fading immediately
+          task.completedAt = Date.now()
+          taskOpacities.value[task.id] = 1
+        } else if (task.completed && task.completedAt) {
+          // Initialize opacity for tasks with completedAt
+          taskOpacities.value[task.id] = calculateOpacity(task)
+        }
+      })
+      
       sortTasks()
+      // Initial fade check after loading
+      updateFadeProgress()
     }
   } catch {
     // Decryption failed or data corrupted - start fresh
@@ -104,6 +161,16 @@ function toggleTask(id: string) {
   const task = tasks.value.find(task => task.id === id)
   if (task) {
     task.completed = !task.completed
+    if (task.completed) {
+      // Store completion timestamp when marking as complete
+      task.completedAt = Date.now()
+      // Initialize opacity to 1 (fully visible)
+      taskOpacities.value[task.id] = 1
+    } else {
+      // Clear completion timestamp and opacity when uncompleting
+      delete task.completedAt
+      delete taskOpacities.value[task.id]
+    }
     sortTasks()
   }
 }
@@ -183,6 +250,61 @@ function handleKeyPress(event: KeyboardEvent) {
   }
 }
 
+// Calculate opacity for a completed task
+function calculateOpacity(task: Task): number {
+  if (!task.completed || !task.completedAt) {
+    return 1
+  }
+
+  const elapsedSeconds = (Date.now() - task.completedAt) / 1000
+  const opacity = Math.max(0, Math.min(1, 1 - (elapsedSeconds / fadeDuration.value)))
+  return opacity
+}
+
+// Update opacities and delete fully faded tasks
+function updateFadeProgress() {
+  if (import.meta.server) return
+
+  const tasksToDelete: string[] = []
+
+  tasks.value.forEach((task) => {
+    if (task.completed && task.completedAt) {
+      const opacity = calculateOpacity(task)
+      taskOpacities.value[task.id] = opacity
+
+      // Mark for deletion if fully transparent
+      if (opacity <= 0) {
+        tasksToDelete.push(task.id)
+      }
+    }
+  })
+
+  // Delete fully faded tasks
+  tasksToDelete.forEach((id) => {
+    deleteTask(id)
+  })
+}
+
+// Set up interval to update fade progress
+let fadeInterval: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  if (import.meta.server) return
+  // Update fade progress every second
+  fadeInterval = setInterval(() => {
+    updateFadeProgress()
+  }, 1000)
+  // Initial update
+  updateFadeProgress()
+})
+
+onUnmounted(() => {
+  if (fadeInterval) {
+    clearInterval(fadeInterval)
+    fadeInterval = null
+  }
+})
+
 // Expose tasks for parent component
 defineExpose({
   tasks
@@ -227,10 +349,14 @@ defineExpose({
         :key="task.id"
         :data-testid="`task-item-${task.id}`"
         :draggable="true"
-        class="flex items-center gap-3 p-3 rounded-lg border border-border bg-default hover:bg-elevated transition-colors cursor-move"
+        class="flex items-center gap-3 p-3 rounded-lg border border-border bg-default hover:bg-elevated transition-all cursor-move"
         :class="{
           'opacity-50': draggedTaskId === task.id,
           'ring-2 ring-primary': dragOverTaskId === task.id && draggedTaskId !== task.id
+        }"
+        :style="{
+          opacity: task.completed && task.completedAt ? taskOpacities[task.id] ?? calculateOpacity(task) : 1,
+          transition: 'opacity 0.3s ease-in-out'
         }"
         @dragstart="handleDragStart($event, task.id)"
         @dragover="handleDragOver($event, task.id)"
