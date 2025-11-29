@@ -12,6 +12,17 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.0.6',
+    date: '2025-11-29',
+    changes: {
+      fixed: [
+        'Fixed Security Setup modal not being dismissible when changing security mode (users can now cancel without choosing an option)',
+        'Fixed test reliability issue for security mode change on desktop browsers (Firefox/WebKit)',
+        'Improved test timing for localStorage operations to ensure proper verification'
+      ]
+    }
+  },
+  {
     version: '2.0.5',
     date: '2025-11-29',
     changes: {
@@ -97,7 +108,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.0.5',
+    getLatestVersion: () => changelogData[0]?.version || '2.0.6',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }

@@ -80,10 +80,45 @@ test.describe('Auto Mode Security', () => {
 
     await expect(page.getByTestId('timer-start')).toBeVisible({ timeout: 10000 })
 
+    // Wait a bit for localStorage write to complete (especially important for Firefox/WebKit)
+    await page.waitForTimeout(100)
+
     // Verify mode changed
     const config = await getStorageItem(page, STORAGE_KEYS.security)
     const parsed = JSON.parse(config!)
     expect(parsed.mode).toBe('pin')
+  })
+
+  test('should allow cancelling mode change and preserve current mode', async ({ page }) => {
+    // Start with auto mode
+    await page.getByTestId('security-auto-option').click()
+    await expect(page.getByTestId('timer-start')).toBeVisible({ timeout: 10000 })
+
+    // Verify initial mode is auto
+    const initialConfig = await getStorageItem(page, STORAGE_KEYS.security)
+    const initialParsed = JSON.parse(initialConfig!)
+    expect(initialParsed.mode).toBe('auto')
+
+    // Open security dropdown and change mode
+    await page.getByRole('button', { name: /Security/ }).click()
+    await page.getByRole('menuitem', { name: 'Change Security Mode' }).click()
+
+    // Should show security setup modal
+    await expect(page.getByText('Choose Your Security Level')).toBeVisible()
+
+    // Cancel by pressing Escape
+    await page.keyboard.press('Escape')
+
+    // Modal should be closed
+    await expect(page.getByText('Choose Your Security Level')).not.toBeVisible()
+
+    // App should still be functional
+    await expect(page.getByTestId('timer-start')).toBeVisible()
+
+    // Mode should still be auto (unchanged)
+    const finalConfig = await getStorageItem(page, STORAGE_KEYS.security)
+    const finalParsed = JSON.parse(finalConfig!)
+    expect(finalParsed.mode).toBe('auto')
   })
 
   test('should encrypt tasks in auto mode', async ({ page }) => {

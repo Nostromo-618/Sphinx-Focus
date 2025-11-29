@@ -99,7 +99,15 @@ function saveSettings() {
   }
 }
 
-function handleClose() {
+function handleClose(open?: boolean) {
+  // If called from @update:open event, open will be a boolean
+  // If called directly from button click, open will be undefined
+  if (open === undefined || !open) {
+    emit('close')
+  }
+}
+
+function handleCancel() {
   emit('close')
 }
 </script>
@@ -110,7 +118,7 @@ function handleClose() {
     title="Timer Settings"
     description="Configure your focus and rest durations"
     :ui="{ content: 'sm:max-w-md z-[101]', overlay: 'z-[100]' }"
-    @close="handleClose"
+    @update:open="handleClose"
   >
     <template #body>
       <div class="space-y-6">
@@ -193,7 +201,7 @@ function handleClose() {
             color="neutral"
             variant="outline"
             class="flex-1"
-            @click="handleClose"
+            @click="handleCancel"
           />
           <UButton
             label="Save"

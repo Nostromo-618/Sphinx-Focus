@@ -1,9 +1,23 @@
 <script setup lang="ts">
+const props = withDefaults(defineProps<{
+  dismissible?: boolean
+}>(), {
+  dismissible: false
+})
+
 const emit = defineEmits<{
   complete: []
+  cancel: []
 }>()
 
 const { setupAutoMode, setupPINMode } = useSecuritySettings()
+
+function handleUpdateOpen(open: boolean) {
+  // When modal is being closed (open = false) and it's dismissible, emit cancel
+  if (!open && props.dismissible) {
+    emit('cancel')
+  }
+}
 
 type Step = 'select' | 'pin-setup'
 
@@ -101,8 +115,9 @@ function goBack() {
 <template>
   <UModal
     :open="true"
-    :close="false"
+    :close="dismissible"
     :ui="{ content: 'sm:max-w-lg z-[101]', overlay: 'z-[100]' }"
+    @update:open="handleUpdateOpen"
   >
     <template #header>
       <!-- Mode Selection Header -->

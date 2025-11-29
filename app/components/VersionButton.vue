@@ -39,7 +39,6 @@ const changeTypeColors: Record<string, string> = {
   <UModal
     v-model:open="open"
     title="Changelog"
-    description="View the complete version history and changes for this application."
     :ui="{ content: 'max-w-2xl' }"
   >
     <UButton

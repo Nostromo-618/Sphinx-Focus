@@ -29,13 +29,15 @@ const showSetupModal = ref(false)
 const showPINModal = ref(false)
 const showClearConfirm = ref(false)
 const appReady = ref(false)
+const isSetupModalDismissible = ref(false)
 
 onMounted(async () => {
   await initialize()
 
   if (isFirstRun()) {
-    // First time user - show security setup
+    // First time user - show security setup (non-dismissible)
     showSetupModal.value = true
+    isSetupModalDismissible.value = false
   } else if (currentMode.value === 'pin' && !isUnlocked.value) {
     // Returning PIN user - need to unlock
     showPINModal.value = true
@@ -47,6 +49,7 @@ onMounted(async () => {
 
 function handleSetupComplete() {
   showSetupModal.value = false
+  isSetupModalDismissible.value = false
   // If we were changing mode, we might need to reload tasks
   // The security settings will have been updated, so tasks should reload automatically
   appReady.value = true
@@ -58,8 +61,9 @@ function handleUnlocked() {
 }
 
 function handleReset() {
-  // User cleared data - show setup again
+  // User cleared data - show setup again (non-dismissible)
   showPINModal.value = false
+  isSetupModalDismissible.value = false
   showSetupModal.value = true
 }
 
@@ -70,8 +74,15 @@ function handleLock() {
 }
 
 function handleChangeMode() {
-  // Show setup modal to change mode
+  // Show setup modal to change mode (dismissible)
+  isSetupModalDismissible.value = true
   showSetupModal.value = true
+}
+
+function handleSetupCancel() {
+  // User cancelled changing mode - just close the modal
+  showSetupModal.value = false
+  isSetupModalDismissible.value = false
 }
 
 function handleClearData() {
@@ -81,6 +92,7 @@ function handleClearData() {
 function confirmClearData() {
   clearAllData()
   showClearConfirm.value = false
+  isSetupModalDismissible.value = false
   showSetupModal.value = true
   appReady.value = false
 }
@@ -92,10 +104,12 @@ function cancelClearData() {
 
 <template>
   <UApp>
-    <!-- Security Setup Modal (First Run) -->
+    <!-- Security Setup Modal (First Run or Change Mode) -->
     <SecuritySetupModal
       v-if="showSetupModal"
+      :dismissible="isSetupModalDismissible"
       @complete="handleSetupComplete"
+      @cancel="handleSetupCancel"
     />
 
     <!-- PIN Entry Modal (Returning PIN Users) -->
