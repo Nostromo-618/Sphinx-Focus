@@ -1,15 +1,17 @@
 # Sphinx Focus
 
-A minimalist Pomodoro timer and task manager to help you stay focused and productive. Built with Nuxt UI.
+A minimalist Focus timer and task manager to help you stay focused and productive. Built with Nuxt UI.
 
 ## Features
 
-- 🍅 **Pomodoro Timer** - 25-minute focus sessions with 5-minute breaks
-- ✅ **Task Management** - Organize and track your tasks
-- 🔒 **Privacy First** - Optional PIN protection with encrypted local storage
-- 🌓 **Dark Mode** - Beautiful light and dark themes
-- 📱 **Responsive** - Works seamlessly on desktop and mobile
-- ⚡ **Fast** - Built with Nuxt 4 and optimized for performance
+- 🍅 **Pomodoro Timer by Default** – 25-minute focus sessions with 5-minute breaks. Customizable.
+- ✅ **Task Management** – Organize and track your tasks
+- 🔒 **Privacy First** – All data stays on your device. No tracking.
+- 🛡️ **PIN Protected & Encrypted** – Secure your timer and tasks with PIN and local encryption
+- 🌓 **Dark Mode** – Beautiful light and dark themes
+- 📱 **Responsive** – Works seamlessly on desktop and mobile
+- ⚡ **Fast** – Built with Nuxt 4 and optimized for performance
+- 💸 **Free to Use** – 100% free, no ads, no subscriptions
 
 ## Quick Start
 
@@ -56,9 +58,24 @@ pnpm generate
 - [TypeScript](https://www.typescriptlang.org/) - Type safety
 - [Tailwind CSS](https://tailwindcss.com/) - Styling
 
+## Security
+
+All dependencies are audited using [AuditJS](https://github.com/sonatype-nexus-community/auditjs) with Sonatype OSS Index:
+
+```
+✔ No vulnerabilities found in production dependencies
+
+Dependencies audited (2025-11-29):
+  - @iconify-json/lucide
+  - @iconify-json/simple-icons
+  - @nuxt/icon
+  - @nuxt/ui
+  - nuxt
+```
+
 ## License
 
-MIT
+MIT License - see [LICENSE](LICENSE) for details
 
 ## Links
 

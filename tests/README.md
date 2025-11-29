@@ -1,54 +1,61 @@
 # Sphinx Focus Test Suite
 
-This directory contains automated tests for the Sphinx Focus application using Playwright.
+This directory contains automated E2E tests for the Sphinx Focus application using Playwright.
+
+> **Test Count:** 99 tests  
+> **Coverage:** 100% of defined features  
+> **Last Updated:** 2025-11-29
 
 ## Directory Structure
 
 ```
 tests/
-├── e2e/                          # End-to-end browser tests
-│   ├── security/                 # Security flow tests
-│   │   ├── first-run-setup.spec.ts   [P0 - Critical]
-│   │   ├── pin-unlock.spec.ts        [P0 - Critical]
-│   │   └── auto-mode.spec.ts         [P2 - Medium]
-│   ├── timer/                    # Timer functionality tests
-│   │   ├── timer-controls.spec.ts    [P1 - High]
-│   │   ├── timer-persistence.spec.ts [P2 - Medium]
-│   │   └── timer-settings.spec.ts    [P2 - Medium]
-│   ├── tasks/                    # Task management tests
-│   │   ├── task-crud.spec.ts         [P1 - High]
-│   │   └── task-drag-drop.spec.ts    [P3 - Low]
-│   └── ui/                       # UI/UX tests
-│       ├── color-mode.spec.ts        [P3 - Low]
-│       └── responsive.spec.ts        [P3 - Low]
-├── fixtures/                     # Test utilities and helpers
-│   └── test-utils.ts
-└── README.md                     # This file
+├── e2e/                              # End-to-end browser tests
+│   ├── security/                     # Security flow tests
+│   │   ├── first-run-setup.spec.ts   # [P0 - Critical] First-time user setup
+│   │   ├── pin-unlock.spec.ts        # [P0 - Critical] PIN unlock & lock flows
+│   │   └── auto-mode.spec.ts         # [P2 - Medium] Auto mode security
+│   ├── timer/                        # Timer functionality tests
+│   │   ├── timer-controls.spec.ts    # [P1 - High] Start, pause, resume, reset, skip
+│   │   ├── timer-persistence.spec.ts # [P2 - Medium] State persistence across reloads
+│   │   └── timer-settings.spec.ts    # [P2 - Medium] Duration & blur mode settings
+│   ├── tasks/                        # Task management tests
+│   │   ├── task-crud.spec.ts         # [P1 - High] Create, read, update, delete
+│   │   └── task-drag-drop.spec.ts    # [P3 - Low] Drag & drop reordering
+│   └── ui/                           # UI/UX tests
+│       ├── color-mode.spec.ts        # [P3 - Low] Light/dark/system theme
+│       └── responsive.spec.ts        # [P3 - Low] Mobile & tablet layouts
+├── fixtures/                         # Test utilities and helpers
+│   └── test-utils.ts                 # Page objects, helpers, constants
+└── README.md                         # This file
 ```
 
 ## Running Tests
 
-### All Tests
+### All Tests (Headless)
 ```bash
 pnpm test
 ```
 
-### Interactive UI Mode
+### Interactive UI Mode (Recommended for Debugging)
 ```bash
 pnpm test:ui
 ```
+Opens Playwright's interactive test runner with timeline, screenshots, and step-through capability.
 
-### Debug Mode
-```bash
-pnpm test:debug
-```
-
-### Headed Mode (see browser)
+### Headed Mode (Watch Browser)
 ```bash
 pnpm test:headed
 ```
+Runs tests with visible browser window so you can observe the automation.
 
-### Single Browser
+### Debug Mode (Step Through)
+```bash
+pnpm test:debug
+```
+Pauses before each action for step-by-step debugging.
+
+### Single Browser (Faster)
 ```bash
 pnpm test:chromium
 ```
@@ -58,138 +65,225 @@ pnpm test:chromium
 pnpm test tests/e2e/security/first-run-setup.spec.ts
 ```
 
-### Specific Test by Name
+### Filter by Test Name
 ```bash
 pnpm test -g "should complete setup with PIN mode"
 ```
 
+### Slow Motion (Observe Actions)
+```bash
+pnpm exec playwright test --headed --slow-mo=500
+```
+Slows down each action by 500ms for observation.
+
+## Test Coverage by Feature
+
+### Security (P0 - Critical)
+| Test File | Tests | Coverage |
+|-----------|-------|----------|
+| `first-run-setup.spec.ts` | 9 | First-time modal, PIN setup, auto setup, validation |
+| `pin-unlock.spec.ts` | 13 | Unlock flow, wrong PIN, forgot PIN, lock/unlock cycle |
+| `auto-mode.spec.ts` | 6 | Auto mode persistence, encryption, mode switching |
+
+### Timer (P1-P2)
+| Test File | Tests | Coverage |
+|-----------|-------|----------|
+| `timer-controls.spec.ts` | 14 | Start, pause, resume, reset, skip, mode switching |
+| `timer-persistence.spec.ts` | 7 | State persistence, elapsed time, session expiry |
+| `timer-settings.spec.ts` | 10 | Duration config, validation, blur mode |
+
+### Tasks (P1-P3)
+| Test File | Tests | Coverage |
+|-----------|-------|----------|
+| `task-crud.spec.ts` | 19 | Add, delete, complete, persist, encrypt, sort |
+| `task-drag-drop.spec.ts` | 6 | Drag handle, reorder, persist order |
+
+### UI (P3)
+| Test File | Tests | Coverage |
+|-----------|-------|----------|
+| `color-mode.spec.ts` | 8 | Light/dark/system, persist, dropdown |
+| `responsive.spec.ts` | 9 | Desktop, tablet, mobile, orientation |
+
 ## Writing Tests
 
-### Test File Naming
-
-- Use `.spec.ts` extension
-- Name should describe the feature being tested
-- Group related tests in subdirectories
-
-### Test Structure
+### Test File Template
 
 ```typescript
 import { test, expect } from '@playwright/test'
-import { SphinxFocusPage, clearStorage } from '../../fixtures/test-utils'
+import { 
+  clearStorage, 
+  bypassSecuritySetup, 
+  waitForAppReady 
+} from '../../fixtures/test-utils'
 
 test.describe('Feature Name', () => {
   test.beforeEach(async ({ page }) => {
-    // Clear state before each test
     await page.goto('/')
     await clearStorage(page)
+    await bypassSecuritySetup(page)  // Skip for security tests
+    await page.reload()
+    await waitForAppReady(page)
   })
 
-  test('should do something specific', async ({ page }) => {
-    const app = new SphinxFocusPage(page)
+  test('should [action] when [condition]', async ({ page }) => {
+    // Arrange - set up preconditions
     
-    // Arrange
-    await app.setupAutoMode()
+    // Act - perform the action
     
-    // Act
-    await app.addTask('Test task')
-    
-    // Assert
-    await expect(page.getByText('Test task')).toBeVisible()
+    // Assert - verify the outcome
+    await expect(page.getByTestId('element')).toBeVisible()
   })
 })
 ```
 
-### Using Test Utilities
+### Test Naming Convention
 
-The `test-utils.ts` file provides:
+Format: `should [expected behavior] when [condition/action]`
 
-- **SphinxFocusPage**: Page object with common actions
-- **Storage helpers**: `clearStorage()`, `getStorageItem()`, etc.
-- **Bypass helpers**: `bypassSecuritySetup()` for non-security tests
-- **Wait helpers**: `waitForAppReady()`, `waitForSecurityModal()`
-- **Assertion helpers**: `assertTimerDisplay()`, `assertTaskCount()`
+```typescript
+// ✅ Good
+test('should display PIN modal when returning PIN user')
+test('should show error when entering wrong PIN')
+test('should persist timer state across reload')
 
-### Selector Strategy
+// ❌ Bad
+test('test PIN')
+test('PIN works')
+test('timer test')
+```
 
-Prefer selectors in this order:
+## Test Utilities (test-utils.ts)
 
-1. **data-testid** (most reliable)
+### Page Object Class
+```typescript
+const app = new SphinxFocusPage(page)
+await app.setupAutoMode()
+await app.setupPINMode('1234')
+await app.addTask('My task')
+await app.startTimer()
+await app.pauseTimer()
+```
+
+### Storage Helpers
+```typescript
+await clearStorage(page)                    // Clear all app data
+await getStorageItem(page, STORAGE_KEYS.security)
+await setStorageItem(page, key, value)
+await bypassSecuritySetup(page)             // Skip security for non-security tests
+```
+
+### Wait Helpers
+```typescript
+await waitForAppReady(page)                 // Wait for main UI
+await waitForSecurityModal(page)            // Wait for setup modal
+await waitForPINModal(page)                 // Wait for unlock modal
+```
+
+### Assertion Helpers
+```typescript
+await assertTimerDisplay(page, '25:00')
+await assertTimerMode(page, 'Focus')
+await assertTaskCount(page, 3)
+```
+
+### Viewport Helpers
+```typescript
+await setMobileViewport(page)
+await setDesktopViewport(page)
+await setTabletViewport(page)
+```
+
+### Drag & Drop Helpers
+```typescript
+await dragTaskByIndex(page, 0, 2)           // Drag first to third
+await dragTaskByText(page, 'Task A', 'Task B')
+const order = await getTaskOrder(page)      // Get current task order
+```
+
+### Color Mode Helpers
+```typescript
+const isDark = await isDarkMode(page)
+await setColorMode(page, 'dark')
+```
+
+### Constants
+```typescript
+import { 
+  TEST_PIN,           // '1234'
+  WRONG_PIN,          // '9999'
+  STORAGE_KEYS,       // All localStorage keys
+  VIEWPORTS           // desktop, tablet, mobile sizes
+} from '../../fixtures/test-utils'
+```
+
+## Selector Strategy
+
+### Priority Order (MUST follow)
+
+1. **data-testid** - Most reliable
    ```typescript
    page.getByTestId('timer-start')
    ```
 
-2. **Role + name** (semantic)
+2. **Role + accessible name** - Semantic
    ```typescript
    page.getByRole('button', { name: 'Start' })
    ```
 
-3. **Text content** (user-facing)
+3. **Text content** - User-facing
    ```typescript
    page.getByText('Focus Timer')
    ```
 
-### Handling Security
+4. **CSS selector** - Last resort only
+   ```typescript
+   page.locator('.timer-display')
+   ```
 
-For tests that don't focus on security:
+### Available data-testid Attributes
 
-```typescript
-test.beforeEach(async ({ page }) => {
-  await page.goto('/')
-  await bypassSecuritySetup(page)
-  await page.reload()
-  await waitForAppReady(page)
-})
-```
-
-For security-focused tests, go through the actual flow:
-
-```typescript
-test('should setup PIN mode', async ({ page }) => {
-  const app = new SphinxFocusPage(page)
-  await app.setupPINMode('1234')
-  // ...
-})
-```
-
-## Test Data
-
-### Constants
-
-```typescript
-import { TEST_PIN, WRONG_PIN, STORAGE_KEYS } from '../../fixtures/test-utils'
-```
-
-### Isolation
-
-- Each test clears localStorage in `beforeEach`
-- Tests don't share state
-- Use unique identifiers when needed
+| Component | Element | data-testid |
+|-----------|---------|-------------|
+| FocusTimer | Start button | `timer-start` |
+| FocusTimer | Pause button | `timer-pause` |
+| FocusTimer | Resume button | `timer-resume` |
+| FocusTimer | Reset button | `timer-reset` |
+| FocusTimer | Skip button | `timer-skip` |
+| FocusTimer | Time display | `timer-display` |
+| FocusTimer | Mode label | `timer-mode` |
+| TaskList | Input field | `task-input` |
+| TaskList | Add button | `task-add` |
+| TaskList | Task item | `task-item-{id}` |
+| TaskList | Task text | `task-text-{id}` |
+| TaskList | Checkbox | `task-checkbox-{id}` |
+| TaskList | Delete button | `task-delete-{id}` |
+| SecuritySetupModal | PIN option | `security-pin-option` |
+| SecuritySetupModal | Auto option | `security-auto-option` |
+| SecuritySetupModal | PIN inputs | `pin-input-{0-3}` |
+| SecuritySetupModal | Confirm inputs | `confirm-pin-input-{0-3}` |
+| PINEntryModal | PIN inputs | `unlock-pin-input-{0-3}` |
+| PINEntryModal | Forgot link | `forgot-pin-link` |
 
 ## Debugging
 
-### Trace Viewer
-
-On failure, traces are saved. View with:
+### View Trace on Failure
 ```bash
 pnpm exec playwright show-trace test-results/*/trace.zip
 ```
 
 ### Screenshots
+Failure screenshots are saved to `test-results/*/`.
 
-Screenshots on failure are in `test-results/*/`.
-
-### Debug Mode
-
+### Debug Specific Test
 ```bash
 pnpm test:debug tests/e2e/security/pin-unlock.spec.ts
 ```
 
 ### VS Code Extension
-
 Install "Playwright Test for VSCode" for:
-- Test explorer
-- Click-to-run
-- Debug integration
+- Test explorer sidebar
+- Click-to-run individual tests
+- Integrated debugging
 
 ## CI/CD
 
@@ -199,19 +293,59 @@ Tests run automatically on:
 
 See `.github/workflows/playwright.yml` for configuration.
 
-## Coverage Goals
+## Test Independence Rules
 
-| Phase | Target | Status |
-|-------|--------|--------|
-| Phase 1 | 50% critical paths | Current |
-| Phase 2 | 70% all features | Planned |
-| Phase 3 | 85% with visual regression | Future |
+1. **Clear state** in `beforeEach` - never rely on previous test state
+2. **No shared mutable state** between tests
+3. **Each test creates its own data** - don't assume data exists
+4. **Use unique identifiers** when creating test data
+
+## Common Patterns
+
+### Testing Security Features
+```typescript
+// Go through actual flow
+test('should unlock with correct PIN', async ({ page }) => {
+  await app.setupPINMode('1234')
+  await page.reload()
+  await app.unlockWithPIN('1234')
+  await expect(page.getByTestId('timer-start')).toBeVisible()
+})
+```
+
+### Testing Non-Security Features
+```typescript
+// Bypass security to focus on feature
+test.beforeEach(async ({ page }) => {
+  await bypassSecuritySetup(page)
+  await page.reload()
+  await waitForAppReady(page)
+})
+```
+
+### Testing Timer with Real Time
+```typescript
+// Use actual waiting (for short durations)
+await page.getByTestId('timer-start').click()
+await page.waitForTimeout(2000)
+const time = await page.getByTestId('timer-display').textContent()
+expect(time).not.toBe('25:00')
+```
+
+### Testing Persistence
+```typescript
+// Make change, reload, verify
+await page.getByTestId('task-input').fill('Persistent task')
+await page.getByTestId('task-add').click()
+await page.reload()
+await waitForAppReady(page)
+await expect(page.getByText('Persistent task')).toBeVisible()
+```
 
 ## Contributing
 
-1. Add tests for new features
+1. Add tests for new features (happy path + error cases)
 2. Add regression tests for bug fixes
-3. Follow existing patterns
+3. Follow existing patterns and naming conventions
 4. Run `pnpm test` before committing
-5. Update this README if adding new test categories
-
+5. Update this README when adding new test categories

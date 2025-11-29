@@ -306,3 +306,120 @@ export async function assertTaskCount(page: Page, count: number) {
 export async function grantNotificationPermission(context: BrowserContext) {
   await context.grantPermissions(['notifications'])
 }
+
+// ============================================================================
+// Viewport Helpers
+// ============================================================================
+
+/**
+ * Common viewport sizes for responsive testing
+ */
+export const VIEWPORTS = {
+  desktop: { width: 1280, height: 720 },
+  tablet: { width: 768, height: 1024 },
+  mobile: { width: 375, height: 667 },
+  mobileLandscape: { width: 667, height: 375 },
+  smallMobile: { width: 320, height: 568 }
+} as const
+
+/**
+ * Set viewport to mobile size
+ */
+export async function setMobileViewport(page: Page) {
+  await page.setViewportSize(VIEWPORTS.mobile)
+}
+
+/**
+ * Set viewport to desktop size
+ */
+export async function setDesktopViewport(page: Page) {
+  await page.setViewportSize(VIEWPORTS.desktop)
+}
+
+/**
+ * Set viewport to tablet size
+ */
+export async function setTabletViewport(page: Page) {
+  await page.setViewportSize(VIEWPORTS.tablet)
+}
+
+// ============================================================================
+// Drag and Drop Helpers
+// ============================================================================
+
+/**
+ * Drag a task from one position to another by index
+ * @param page - Playwright page object
+ * @param fromIndex - Index of the task to drag (0-based)
+ * @param toIndex - Index of the target position (0-based)
+ */
+export async function dragTaskByIndex(page: Page, fromIndex: number, toIndex: number) {
+  const tasks = page.locator('[data-testid^="task-item-"]')
+  const fromTask = tasks.nth(fromIndex)
+  const toTask = tasks.nth(toIndex)
+
+  await fromTask.dragTo(toTask)
+  // Allow time for state update
+  await page.waitForTimeout(300)
+}
+
+/**
+ * Drag a task from one position to another by text content
+ * @param page - Playwright page object
+ * @param fromText - Text content of the task to drag
+ * @param toText - Text content of the target task
+ */
+export async function dragTaskByText(page: Page, fromText: string, toText: string) {
+  const fromTask = page.locator('[data-testid^="task-item-"]').filter({ hasText: fromText })
+  const toTask = page.locator('[data-testid^="task-item-"]').filter({ hasText: toText })
+
+  await fromTask.dragTo(toTask)
+  // Allow time for state update
+  await page.waitForTimeout(300)
+}
+
+/**
+ * Get the current order of tasks as an array of text content
+ * @param page - Playwright page object
+ * @returns Array of task text content in current order
+ */
+export async function getTaskOrder(page: Page): Promise<string[]> {
+  const tasks = page.locator('[data-testid^="task-item-"]')
+  const count = await tasks.count()
+  const order: string[] = []
+
+  for (let i = 0; i < count; i++) {
+    const text = await tasks.nth(i).locator('[data-testid^="task-text-"]').textContent()
+    order.push(text || '')
+  }
+
+  return order
+}
+
+// ============================================================================
+// Color Mode Helpers
+// ============================================================================
+
+/**
+ * Check if dark mode is currently active
+ */
+export async function isDarkMode(page: Page): Promise<boolean> {
+  const htmlClass = await page.locator('html').getAttribute('class')
+  return htmlClass?.includes('dark') || false
+}
+
+/**
+ * Set color mode preference
+ * @param page - Playwright page object
+ * @param mode - 'light', 'dark', or 'system'
+ */
+export async function setColorMode(page: Page, mode: 'light' | 'dark' | 'system') {
+  const colorModeButton = page.getByRole('button', { name: /mode.*click to change theme/i })
+  await colorModeButton.click()
+
+  const modeLabel = mode.charAt(0).toUpperCase() + mode.slice(1)
+  await page.getByRole('menuitemcheckbox', { name: modeLabel }).click()
+
+  // Wait for theme transition
+  await page.waitForTimeout(300)
+}
