@@ -93,11 +93,39 @@ export function useSecuritySettings() {
   }
 
   /**
+   * Migrate encrypted tasks from old key to new key
+   */
+  async function migrateEncryptedData(oldKey: CryptoKey, newKey: CryptoKey): Promise<void> {
+    if (import.meta.server) return
+
+    const encryptedTasks = localStorage.getItem('sphinx-focus-tasks-encrypted')
+    if (!encryptedTasks) return
+
+    try {
+      // Decrypt with old key, re-encrypt with new key
+      const decrypted = await decrypt(encryptedTasks, oldKey)
+      const reEncrypted = await encrypt(decrypted, newKey)
+      localStorage.setItem('sphinx-focus-tasks-encrypted', reEncrypted)
+    } catch {
+      // If decryption fails (corrupted data or wrong key), leave it as is
+      // The TaskList component will handle the error gracefully
+    }
+  }
+
+  /**
    * Setup auto-key mode (simpler UX)
    */
   async function setupAutoMode(): Promise<void> {
+    // Capture old key if we're changing modes (not first setup)
+    const oldKey = sessionKey
+
     const key = await generateKey()
     const exportedKey = await exportKey(key)
+
+    // Migrate encrypted data if we're changing modes
+    if (oldKey) {
+      await migrateEncryptedData(oldKey, key)
+    }
 
     const config: SecurityConfig = {
       mode: 'auto',
@@ -115,8 +143,16 @@ export function useSecuritySettings() {
    * Setup PIN mode (most secure)
    */
   async function setupPINMode(pin: string): Promise<void> {
+    // Capture old key if we're changing modes (not first setup)
+    const oldKey = sessionKey
+
     const salt = generateSalt()
     const key = await deriveKeyFromPIN(pin, salt)
+
+    // Migrate encrypted data if we're changing modes
+    if (oldKey) {
+      await migrateEncryptedData(oldKey, key)
+    }
 
     // Create a verification hash (encrypt a known string)
     const verificationData = await encrypt('sphinx-focus-verified', key)

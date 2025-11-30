@@ -12,6 +12,19 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.0.8',
+    date: '2025-11-28',
+    changes: {
+      fixed: [
+        'Fixed critical bug where changing security mode (auto to PIN or PIN to auto) and refreshing page would wipe out all tasks',
+        'Added automatic task data migration when changing security modes to preserve encrypted tasks with new encryption key'
+      ],
+      added: [
+        'Comprehensive E2E test coverage for security mode changes to prevent task data loss'
+      ]
+    }
+  },
+  {
     version: '2.0.7',
     date: '2025-11-29',
     changes: {
@@ -119,7 +132,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.0.7',
+    getLatestVersion: () => changelogData[0]?.version || '2.0.8',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }
