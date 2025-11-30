@@ -196,4 +196,3 @@ test.describe('Timer Persistence', () => {
     expect(parsed.lastUpdateTimestamp).toBeDefined()
   })
 })
-

@@ -10,7 +10,6 @@ interface Task {
   completedAt?: number
 }
 
-
 const { encrypt, decrypt } = useEncryption()
 const { isUnlocked, hasSessionKey, getSessionKey } = useSecuritySettings()
 
@@ -80,7 +79,7 @@ async function loadTasks() {
       const decrypted = await decrypt(encrypted, key)
       const loadedTasks = JSON.parse(decrypted) as Task[]
       tasks.value = loadedTasks
-      
+
       // Initialize opacities for completed tasks that don't have completedAt
       // (for backward compatibility with existing tasks)
       loadedTasks.forEach((task) => {
@@ -94,7 +93,7 @@ async function loadTasks() {
           taskOpacities.value[task.id] = calculateOpacity(task)
         }
       })
-      
+
       sortTasks()
       // Initial fade check after loading
       updateFadeProgress()

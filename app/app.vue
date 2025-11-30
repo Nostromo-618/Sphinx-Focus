@@ -164,12 +164,7 @@ function cancelClearData() {
       :ui="{ toggle: 'sm:hidden' }"
     >
       <template #left>
-        <NuxtLink
-          to="/"
-          class="font-semibold text-lg"
-        >
-          Sphinx Focus
-        </NuxtLink>
+        <AboutModal />
       </template>
 
       <template #right>

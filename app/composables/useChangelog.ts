@@ -12,15 +12,43 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.1.0',
+    date: '2025-11-30',
+    changes: {
+      added: [
+        'Immersive rest mode with animated gradient background',
+        'Glowing neon green circle around timer during rest',
+        'Two-stage rest transition: blur → immersive centered view',
+        '5-second notification before auto-entering rest mode',
+        'E2E tests for rest mode visual enhancements'
+      ],
+      changed: [
+        'REST label now uppercase and larger',
+        'Removed Pause button during rest (only Skip/Reset)',
+        'Smoother 3-second exit transition from rest mode',
+        'Timer text 33% smaller, circle 33% larger in rest overlay'
+      ]
+    }
+  },
+  {
+    version: '2.0.9',
+    date: '2025-11-30',
+    changes: {
+      added: [
+        'About modal with app info, privacy details, security overview, and usage tips'
+      ]
+    }
+  },
+  {
     version: '2.0.8',
-    date: '2025-11-28',
+    date: '2025-11-30',
     changes: {
       fixed: [
-        'Fixed critical bug where changing security mode (auto to PIN or PIN to auto) and refreshing page would wipe out all tasks',
-        'Added automatic task data migration when changing security modes to preserve encrypted tasks with new encryption key'
+        'Fixed task data loss when changing security modes',
+        'Auto-migrate encrypted tasks when switching modes'
       ],
       added: [
-        'Comprehensive E2E test coverage for security mode changes to prevent task data loss'
+        'E2E tests for security mode changes'
       ]
     }
   },
@@ -29,9 +57,9 @@ export const changelogData: ChangelogEntry[] = [
     date: '2025-11-29',
     changes: {
       added: [
-        'Task fade-away feature: completed tasks automatically fade out and delete after customizable duration (1-180 seconds, default 55)',
-        'Task Settings modal with fade duration configuration',
-        'Settings button in Task List header for quick access to task settings'
+        'Task fade-away: completed tasks auto-delete (1-180s)',
+        'Task Settings modal with fade duration',
+        'Settings button in Task List header'
       ]
     }
   },
@@ -40,9 +68,7 @@ export const changelogData: ChangelogEntry[] = [
     date: '2025-11-29',
     changes: {
       fixed: [
-        'Fixed Security Setup modal not being dismissible when changing security mode (users can now cancel without choosing an option)',
-        'Fixed test reliability issue for security mode change on desktop browsers (Firefox/WebKit)',
-        'Improved test timing for localStorage operations to ensure proper verification'
+        'Security Setup modal now dismissible when changing mode'
       ]
     }
   },
@@ -51,20 +77,14 @@ export const changelogData: ChangelogEntry[] = [
     date: '2025-11-29',
     changes: {
       added: [
-        'Timer Settings modal with focus/rest duration configuration',
-        'Blur mode toggle in timer settings'
+        'Timer Settings modal with focus/rest duration and blur mode'
       ],
       fixed: [
-        'Fixed Timer Settings modal not opening (missing component)',
-        'Fixed favicon 404 error (removed non-existent favicon.png reference)',
-        'Fixed hydration mismatch warning for timer display',
-        'Fixed missing USwitch component in Timer Settings modal',
-        'Fixed accessibility warnings for Timer Settings dialog',
-        'Clear All Data now removes all app data including timer settings'
+        'Timer Settings modal fixes and improvements',
+        'Clear All Data removes timer settings'
       ],
       changed: [
-        'Improved build configuration with chunk splitting for better performance',
-        'Disabled production sourcemaps to reduce build warnings'
+        'Build optimizations'
       ]
     }
   },
@@ -73,16 +93,13 @@ export const changelogData: ChangelogEntry[] = [
     date: '2025-11-29',
     changes: {
       added: [
-        'Timer title now displays active task name and turns green during focus sessions',
-        'Blur mode to minimize distractions during focus sessions (blurs everything except timer)',
-        'Timer Settings modal with customizable focus and rest intervals (1-99 minutes)',
-        'Settings button (cogwheel) in timer card header for quick access to settings',
-        'Blur mode toggle in settings (enabled by default)',
-        'Settings persist across browser sessions'
+        'Timer shows active task name and turns green during focus',
+        'Blur mode to minimize distractions',
+        'Timer Settings modal (1-99 min intervals)',
+        'Settings button in timer header'
       ],
       fixed: [
-        'Replaced full-screen slideover menu with compact drawer menu for better mobile UX',
-        'Fixed security dialog being overlapped by header overlay on mobile devices'
+        'Mobile menu improvements'
       ]
     }
   },
@@ -91,10 +108,7 @@ export const changelogData: ChangelogEntry[] = [
     date: '2025-11-29',
     changes: {
       fixed: [
-        'Fixed hamburger menu hiding page content by switching to slideover mode',
-        'Moved header icons to mobile menu for better mobile UX',
-        'Hide hamburger on tablet, show only on mobile (< 640px)',
-        'Fixed document title to show app name in idle state'
+        'Mobile menu improvements'
       ]
     }
   },
@@ -132,7 +146,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.0.8',
+    getLatestVersion: () => changelogData[0]?.version || '2.1.0',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }

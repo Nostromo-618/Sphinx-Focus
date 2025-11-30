@@ -27,3 +27,63 @@
 .fade-leave-to {
   opacity: 0;
 }
+
+/* Rest mode content transition (stage 1 -> stage 2) */
+.rest-content-enter-active {
+  transition: opacity 1s ease-out, transform 1s ease-out, filter 1s ease-out;
+}
+
+.rest-content-leave-active {
+  transition: opacity 1.5s ease-in, transform 1.5s ease-in, filter 1.5s ease-in;
+}
+
+.rest-content-enter-from {
+  opacity: 0;
+  transform: scale(0.95);
+  filter: blur(8px);
+}
+
+.rest-content-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+  filter: blur(16px);
+}
+
+/* Rest mode stage 1 overlay transition */
+.rest-stage1-enter-active {
+  transition: opacity 0.8s ease-out;
+}
+
+.rest-stage1-leave-active {
+  transition: opacity 2s ease-in;
+}
+
+.rest-stage1-enter-from,
+.rest-stage1-leave-to {
+  opacity: 0;
+}
+
+/* Rest mode immersive overlay transition */
+.rest-overlay-enter-active {
+  transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+}
+
+/* Slower exit - 3 second gradual phase out */
+.rest-overlay-leave-active {
+  transition: opacity 1.5s ease-in, transform 1.5s ease-in;
+}
+
+.rest-overlay-enter-from {
+  opacity: 0;
+  transform: scale(1.02);
+}
+
+.rest-overlay-leave-to {
+  opacity: 0;
+  transform: scale(0.98);
+}
+
+/* Custom duration utility for 2 seconds */
+.duration-2000 {
+  transition-duration: 2000ms;
+}

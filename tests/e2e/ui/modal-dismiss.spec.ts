@@ -20,7 +20,7 @@ test.describe('Modal Dismiss Behavior', () => {
       const closeButton = page.locator('button[aria-label*="close"], button[aria-label*="Close"]').first()
       // Alternative: look for the iconify X icon
       const xButton = page.locator('.iconify.i-lucide\\:x').first()
-      
+
       // Try clicking the X button if it exists
       const xButtonCount = await xButton.count()
       if (xButtonCount > 0) {
@@ -104,7 +104,7 @@ test.describe('Modal Dismiss Behavior', () => {
       // X button should not be visible (close prop is false)
       const xButton = page.locator('.iconify.i-lucide\\:x')
       const xButtonCount = await xButton.count()
-      
+
       // If X button exists, clicking it should not close the modal
       if (xButtonCount > 0) {
         await xButton.first().click()
@@ -234,4 +234,3 @@ test.describe('Modal Dismiss Behavior', () => {
     })
   })
 })
-

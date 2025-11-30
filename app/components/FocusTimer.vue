@@ -346,15 +346,34 @@ function completeSession() {
   // Trigger notifications
   playNotificationSound()
   showBrowserNotification(completedMode)
-  showToastNotification(completedMode)
 
-  // Flash the completion banner briefly
-  showCompletionBanner.value = true
-  setTimeout(() => {
-    showCompletionBanner.value = false
-  }, 3000)
+  if (completedMode === 'focus') {
+    // Focus session complete - show 5-second notification before entering rest mode
+    toast.add({
+      title: 'Focus session complete!',
+      description: 'Rest mode starting in 5 seconds...',
+      icon: 'i-lucide-coffee',
+      color: 'success',
+      duration: 5000
+    })
 
-  switchMode()
+    // Flash the completion banner
+    showCompletionBanner.value = true
+
+    // After 5 seconds, switch to rest mode
+    setTimeout(() => {
+      showCompletionBanner.value = false
+      switchMode()
+    }, 5000)
+  } else {
+    // Rest session complete - immediate switch back to focus
+    showToastNotification(completedMode)
+    showCompletionBanner.value = true
+    setTimeout(() => {
+      showCompletionBanner.value = false
+    }, 3000)
+    switchMode()
+  }
 }
 
 function skipSession() {
@@ -367,13 +386,18 @@ onUnmounted(() => {
   }
 })
 
-// Expose state for parent component
+// Expose state and controls for parent component
 defineExpose({
   mode,
   state,
   timeRemaining,
   formattedTime,
-  blurModeEnabled
+  blurModeEnabled,
+  // Control methods for external use (e.g., RestModeOverlay)
+  pauseTimer,
+  startTimer,
+  resetTimer,
+  skipSession
 })
 </script>
 

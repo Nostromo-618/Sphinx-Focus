@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { clearStorage, bypassSecuritySetup, waitForAppReady, STORAGE_KEYS, getStorageItem } from '../../fixtures/test-utils'
 
 test.describe('Timer Settings', () => {
@@ -168,5 +168,90 @@ test.describe('Timer Settings', () => {
 
     // Now should show new duration
     await expect(page.getByTestId('timer-display')).toHaveText('15:00')
+  })
+})
+
+test.describe('Blur Mode Effects', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/')
+    await clearStorage(page)
+    await bypassSecuritySetup(page)
+    await page.reload()
+    await waitForAppReady(page)
+  })
+
+  // Helper to get Task List card (second card in the grid)
+  function getTaskListCard(page: Page) {
+    return page.locator('.grid > div').nth(1)
+  }
+
+  test('should blur task list during focus mode when blur enabled', async ({ page }) => {
+    // Blur mode is enabled by default
+    // Get Task List card (second card in grid)
+    const taskCard = getTaskListCard(page)
+
+    // Initially idle - should not be blurred
+    await expect(taskCard).not.toHaveClass(/blur-md/)
+
+    // Start focus timer
+    await page.getByTestId('timer-start').click()
+    await page.waitForTimeout(300) // Allow transition
+
+    // Task List should be blurred
+    await expect(taskCard).toHaveClass(/blur-md/)
+    await expect(taskCard).toHaveClass(/opacity-50/)
+  })
+
+  test('should blur task list during rest mode (always)', async ({ page }) => {
+    // Get Task List card (second card in grid)
+    const taskCard = getTaskListCard(page)
+
+    // Skip to rest mode
+    await page.getByTestId('timer-skip').click()
+    await expect(page.getByTestId('timer-mode')).toHaveText('Rest')
+
+    // Idle rest - should not be blurred
+    await expect(taskCard).not.toHaveClass(/blur-xl/)
+
+    // Start rest timer
+    await page.getByTestId('timer-start').click()
+    await page.waitForTimeout(500) // Allow transition for rest mode stage 1
+
+    // Task List should be heavily blurred during rest mode (blur-xl instead of blur-md)
+    await expect(taskCard).toHaveClass(/blur-xl/)
+    await expect(taskCard).toHaveClass(/opacity-20/)
+  })
+
+  test('should not blur task list when timer is idle', async ({ page }) => {
+    // Get Task List card (second card in grid)
+    const taskCard = getTaskListCard(page)
+
+    // Initially idle - should not be blurred
+    await expect(taskCard).not.toHaveClass(/blur-md/)
+
+    // Skip to rest mode (still idle)
+    await page.getByTestId('timer-skip').click()
+    await expect(page.getByTestId('timer-mode')).toHaveText('Rest')
+
+    // Still idle - should not be blurred
+    await expect(taskCard).not.toHaveClass(/blur-md/)
+  })
+
+  test('should not blur task list during focus mode when blur disabled', async ({ page }) => {
+    // Disable blur mode
+    await page.getByRole('button', { name: 'Timer Settings' }).click()
+    const blurToggle = page.locator('#blur-mode')
+    await blurToggle.click() // Toggle off
+    await page.getByRole('button', { name: 'Save' }).click()
+
+    // Get Task List card (second card in grid)
+    const taskCard = getTaskListCard(page)
+
+    // Start focus timer
+    await page.getByTestId('timer-start').click()
+    await page.waitForTimeout(300) // Allow transition
+
+    // Task List should NOT be blurred (blur disabled)
+    await expect(taskCard).not.toHaveClass(/blur-md/)
   })
 })

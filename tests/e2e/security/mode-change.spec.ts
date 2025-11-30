@@ -247,4 +247,3 @@ test.describe('Security Mode Change - Task Persistence', () => {
     await expect(page.getByText('No tasks yet. Add one above to get started!')).toBeVisible()
   })
 })
-

@@ -206,4 +206,3 @@ test.describe('Task Drag and Drop', () => {
     await expect(tasks).toHaveCount(3)
   })
 })
-

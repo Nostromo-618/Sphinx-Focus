@@ -228,4 +228,3 @@ test.describe('Responsive Layout', () => {
     await expect(page.getByTestId('task-input')).toBeVisible()
   })
 })
-
