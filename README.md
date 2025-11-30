@@ -53,24 +53,36 @@ pnpm generate
 ```
 ## Tech Stack
 
-- [Nuxt 4](https://nuxt.com/) - Vue.js framework
-- [Nuxt UI](https://ui.nuxt.com/) - UI component library
-- [TypeScript](https://www.typescriptlang.org/) - Type safety
-- [Tailwind CSS](https://tailwindcss.com/) - Styling
+- [Nuxt 4](https://nuxt.com/) – Vue.js framework
+- [Nuxt UI](https://ui.nuxt.com/) – UI component library
+- [TypeScript](https://www.typescriptlang.org/) – Type safety
+- [Tailwind CSS](https://tailwindcss.com/) – Styling
+- [Anime.js](https://animejs.com/) – Beautiful Animations and UI transitions
 
 ## Security
 
-All dependencies are audited using [AuditJS](https://github.com/sonatype-nexus-community/auditjs) with Sonatype OSS Index:
+All dependencies are audited (2025-11-30) using [AuditJS](https://github.com/sonatype-nexus-community/auditjs) with Sonatype OSS Index:
 
 ```
-✔ No vulnerabilities found in production dependencies
+  AuditJS version: 4.0.47
 
-Dependencies audited (2025-11-29):
-  - @iconify-json/lucide
-  - @iconify-json/simple-icons
-  - @nuxt/icon
-  - @nuxt/ui
-  - nuxt
+✔ Starting application
+✔ Getting coordinates for Sonatype OSS Index
+✔ Auditing your application with Sonatype OSS Index
+✔ Submitting coordinates to Sonatype OSS Index
+✔ Reticulating splines
+✔ Removing whitelisted vulnerabilities
+
+  Sonabot here, beep boop beep boop, here are your Sonatype OSS Index results:
+  Total dependencies audited: 6
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+[1/6] - pkg:npm/@iconify-json/lucide@1.2.77 - No vulnerabilities found!
+[2/6] - pkg:npm/@iconify-json/simple-icons@1.2.60 - No vulnerabilities found!
+[3/6] - pkg:npm/@nuxt/icon@2.1.0 - No vulnerabilities found!
+[4/6] - pkg:npm/@nuxt/ui@4.2.1 - No vulnerabilities found!
+[5/6] - pkg:npm/animejs@4.2.2 - No vulnerabilities found!
+[6/6] - pkg:npm/nuxt@4.2.1 - No vulnerabilities found!
 ```
 
 ## License
