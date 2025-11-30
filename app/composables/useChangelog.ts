@@ -12,6 +12,16 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.1.1',
+    date: '2025-11-30',
+    changes: {
+      fixed: [
+        'Fixed multiple notifications when focus session completes',
+        'Fixed rest mode not auto-starting after countdown'
+      ]
+    }
+  },
+  {
     version: '2.1.0',
     date: '2025-11-30',
     changes: {
@@ -146,7 +156,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.1.0',
+    getLatestVersion: () => changelogData[0]?.version || '2.1.1',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }

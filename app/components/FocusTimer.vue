@@ -341,6 +341,12 @@ function switchMode() {
 }
 
 function completeSession() {
+  // STOP the interval immediately to prevent repeated calls
+  if (intervalId.value) {
+    clearInterval(intervalId.value)
+    intervalId.value = null
+  }
+
   const completedMode = mode.value
 
   // Trigger notifications
@@ -360,10 +366,11 @@ function completeSession() {
     // Flash the completion banner
     showCompletionBanner.value = true
 
-    // After 5 seconds, switch to rest mode
+    // After 5 seconds, switch to rest mode and auto-start
     setTimeout(() => {
       showCompletionBanner.value = false
       switchMode()
+      startTimer() // Auto-start rest mode
     }, 5000)
   } else {
     // Rest session complete - immediate switch back to focus
