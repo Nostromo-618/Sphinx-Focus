@@ -1,4 +1,45 @@
 <script setup lang="ts">
+const QUICK_BLUR_KEY = 'sphinx-focus-quick-blur'
+
+// Load quick blur state from localStorage
+function loadQuickBlur(): boolean {
+  if (import.meta.server) return false
+  try {
+    const stored = localStorage.getItem(QUICK_BLUR_KEY)
+    return stored === 'true'
+  } catch {
+    return false
+  }
+}
+
+// Manual blur override state (persisted)
+// This represents the user's manual preference for blur
+// Initialize with false on SSR, load actual value on client mount
+const manualBlurEnabled = ref(false)
+
+// Load persisted state on client mount
+onMounted(() => {
+  manualBlurEnabled.value = loadQuickBlur()
+})
+
+function saveManualBlur() {
+  if (!import.meta.server) {
+    try {
+      localStorage.setItem(QUICK_BLUR_KEY, manualBlurEnabled.value.toString())
+    } catch (error) {
+      console.error('Failed to save quick blur state:', error)
+    }
+  }
+}
+
+function toggleTaskListBlur() {
+  // Toggle based on current visual state, not just the manual flag
+  // If currently blurred (for any reason), unblur. If not blurred, blur.
+  const currentlyBlurred = taskListBlurred.value
+  manualBlurEnabled.value = !currentlyBlurred
+  saveManualBlur()
+}
+
 const focusTimerRef = ref<{
   mode: 'focus' | 'rest'
   state: 'idle' | 'running' | 'paused'
@@ -75,13 +116,43 @@ const isRestMode = computed(() => {
   return timer.mode === 'rest' && (timer.state === 'running' || timer.state === 'paused')
 })
 
-// Computed blur state: active when focus mode is running and blur mode is enabled, or when rest mode is running (stage 1)
+// Automatic blur: active when focus mode is running and blur mode is enabled in settings
+const autoBlurActive = computed(() => {
+  const timer = focusTimerRef.value
+  if (!timer) return false
+  return timer.mode === 'focus' && timer.state === 'running' && timer.blurModeEnabled
+})
+
+// Combined task list blur state:
+// - If auto-blur is active: blur is ON unless manually turned OFF
+// - If auto-blur is not active: blur follows manual toggle
+// Logic: (auto-blur active OR manual enabled) - but manual can override auto
+const taskListBlurred = computed(() => {
+  if (autoBlurActive.value) {
+    // When auto-blur is active, manualBlurEnabled controls whether to keep it or override
+    // Default should be true (keep blur), user can toggle to false (unblur)
+    return manualBlurEnabled.value
+  }
+  // When auto-blur is not active, manual toggle controls directly
+  return manualBlurEnabled.value
+})
+
+// When auto-blur becomes active, set manual to true so blur is on by default
+// When auto-blur becomes inactive, we keep the manual state as-is
+watch(autoBlurActive, (isActive, wasActive) => {
+  if (isActive && !wasActive) {
+    // Auto-blur just activated - enable blur by default
+    manualBlurEnabled.value = true
+    saveManualBlur()
+  }
+})
+
+// isBlurred for the background overlay - follows taskListBlurred but only during focus mode
 const isBlurred = computed(() => {
   const timer = focusTimerRef.value
   if (!timer) return false
-  // Focus mode: blur when running AND blur mode enabled
-  // Rest mode: always blur when running (enforced) - stage 1 only
-  const isFocusBlur = timer.mode === 'focus' && timer.state === 'running' && timer.blurModeEnabled
+  // Focus mode: show overlay when task list is blurred
+  const isFocusBlur = timer.mode === 'focus' && timer.state === 'running' && taskListBlurred.value
   const isRestStage1Blur = timer.mode === 'rest' && timer.state === 'running' && restStage.value === 1
   return isFocusBlur || isRestStage1Blur
 })
@@ -174,6 +245,19 @@ function handleReset() {
                   {{ timerTitle }}
                 </h3>
                 <UButton
+                  :icon="taskListBlurred ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Toggle task list blur"
+                  @click="toggleTaskListBlur"
+                />
+              </div>
+            </template>
+            <div class="relative">
+              <!-- Settings button - top right of body -->
+              <div class="absolute top-0 right-0">
+                <UButton
                   icon="i-lucide-settings"
                   color="neutral"
                   variant="ghost"
@@ -182,15 +266,15 @@ function handleReset() {
                   @click="showSettingsModal = true"
                 />
               </div>
-            </template>
-            <FocusTimer ref="focusTimerRef" />
+              <FocusTimer ref="focusTimerRef" />
+            </div>
           </UCard>
 
-          <!-- Task List Card - blurred in both focus running and rest stage 1 -->
+          <!-- Task List Card - blurred via quick toggle or during rest stage 1 -->
           <UCard
             class="relative z-10 transition-all duration-1000"
             :class="{
-              'blur-md opacity-50': isBlurred,
+              'blur-md opacity-50': taskListBlurred && restStage === 0,
               'blur-xl opacity-20': restStage === 1
             }"
           >

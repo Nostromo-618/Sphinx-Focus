@@ -12,6 +12,20 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.2.0',
+    date: '2025-12-03',
+    changes: {
+      added: [
+        'Quick blur toggle button (eye icon) in timer header for instant task list blur/unblur',
+        'New task position setting: add tasks at top or bottom',
+        'Task Settings now includes position preference'
+      ],
+      fixed: [
+        'Task drag-and-drop now uses insert behavior instead of swap'
+      ]
+    }
+  },
+  {
     version: '2.1.1',
     date: '2025-11-30',
     changes: {
@@ -156,7 +170,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.1.1',
+    getLatestVersion: () => changelogData[0]?.version || '2.2.0',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }

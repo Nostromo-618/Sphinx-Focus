@@ -4,6 +4,7 @@ const emit = defineEmits<{
 }>()
 
 const FADE_DURATION_KEY = 'sphinx-focus-task-fade-duration'
+const TASK_POSITION_KEY = 'sphinx-focus-task-position'
 
 // Load current setting from localStorage
 function loadFadeDuration(): number {
@@ -17,8 +18,24 @@ function loadFadeDuration(): number {
   }
 }
 
+function loadTaskPosition(): 'bottom' | 'top' {
+  if (import.meta.server) return 'bottom'
+  try {
+    const stored = localStorage.getItem(TASK_POSITION_KEY)
+    return stored === 'top' ? 'top' : 'bottom'
+  } catch {
+    return 'bottom'
+  }
+}
+
 const fadeDuration = ref(loadFadeDuration())
 const fadeError = ref('')
+const taskPosition = ref<'bottom' | 'top'>(loadTaskPosition())
+
+const positionOptions = [
+  { value: 'bottom', label: 'Bottom', description: 'New tasks appear at the end of the list' },
+  { value: 'top', label: 'Top', description: 'New tasks appear at the beginning of the list' }
+]
 
 function validateFadeDuration() {
   const value = fadeDuration.value
@@ -39,11 +56,16 @@ function saveSettings() {
 
   try {
     localStorage.setItem(FADE_DURATION_KEY, fadeDuration.value.toString())
+    localStorage.setItem(TASK_POSITION_KEY, taskPosition.value)
 
-    // Trigger storage event so TaskList can pick up changes
+    // Trigger storage events so TaskList can pick up changes
     window.dispatchEvent(new StorageEvent('storage', {
       key: FADE_DURATION_KEY,
       newValue: fadeDuration.value.toString()
+    }))
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: TASK_POSITION_KEY,
+      newValue: taskPosition.value
     }))
 
     emit('close')
@@ -75,6 +97,21 @@ function handleCancel() {
   >
     <template #body>
       <div class="space-y-6">
+        <!-- New Task Position -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-default">
+            New Task Position
+          </label>
+          <URadioGroup
+            v-model="taskPosition"
+            :items="positionOptions"
+            orientation="horizontal"
+          />
+          <p class="text-xs text-muted">
+            Where new tasks appear in your list
+          </p>
+        </div>
+
         <!-- Fade Duration -->
         <div class="space-y-2">
           <label

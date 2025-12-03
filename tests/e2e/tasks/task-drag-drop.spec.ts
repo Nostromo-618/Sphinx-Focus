@@ -35,7 +35,52 @@ test.describe('Task Drag and Drop', () => {
     await page.getByTestId('task-input').fill('Task C')
     await page.getByTestId('task-add').click()
 
-    // Verify initial order
+    // Verify initial order [A, B, C]
+    const tasks = page.locator('[data-testid^="task-item-"]')
+    await expect(tasks).toHaveCount(3)
+
+    const initialOrder: string[] = []
+    for (let i = 0; i < 3; i++) {
+      const text = await tasks.nth(i).locator('[data-testid^="task-text-"]').textContent()
+      initialOrder.push(text || '')
+    }
+    expect(initialOrder).toEqual(['Task A', 'Task B', 'Task C'])
+
+    // Get task elements
+    const taskC = page.locator('[data-testid^="task-item-"]').filter({ hasText: 'Task C' })
+    const taskA = page.locator('[data-testid^="task-item-"]').filter({ hasText: 'Task A' })
+
+    // Drag Task C (bottom) to Task A's position (top)
+    // With insert behavior, C should insert at top, A and B should shift down
+    await taskC.dragTo(taskA)
+
+    // Wait for reorder to complete
+    await page.waitForTimeout(500)
+
+    // Verify new order - should be [C, A, B] (insert behavior, not swap)
+    const reorderedTasks = page.locator('[data-testid^="task-item-"]')
+    const taskTexts: string[] = []
+    for (let i = 0; i < 3; i++) {
+      const text = await reorderedTasks.nth(i).locator('[data-testid^="task-text-"]').textContent()
+      taskTexts.push(text || '')
+    }
+
+    // Verify insert behavior: C moved to top, A and B shifted down
+    expect(taskTexts).toEqual(['Task C', 'Task A', 'Task B'])
+  })
+
+  test('should reorder tasks when dragging top to bottom', async ({ page }) => {
+    // Add multiple tasks
+    await page.getByTestId('task-input').fill('Task A')
+    await page.getByTestId('task-add').click()
+
+    await page.getByTestId('task-input').fill('Task B')
+    await page.getByTestId('task-add').click()
+
+    await page.getByTestId('task-input').fill('Task C')
+    await page.getByTestId('task-add').click()
+
+    // Verify initial order [A, B, C]
     const tasks = page.locator('[data-testid^="task-item-"]')
     await expect(tasks).toHaveCount(3)
 
@@ -43,26 +88,23 @@ test.describe('Task Drag and Drop', () => {
     const taskA = page.locator('[data-testid^="task-item-"]').filter({ hasText: 'Task A' })
     const taskC = page.locator('[data-testid^="task-item-"]').filter({ hasText: 'Task C' })
 
-    // Drag Task A to Task C's position
+    // Drag Task A (top) to Task C's position (bottom)
+    // With insert behavior, A should insert at bottom, B and C should shift up
     await taskA.dragTo(taskC)
 
     // Wait for reorder to complete
     await page.waitForTimeout(500)
 
-    // Verify new order - Task A should now be after Task B
+    // Verify new order - should be [B, C, A] (insert behavior)
     const reorderedTasks = page.locator('[data-testid^="task-item-"]')
-    const lastTask = reorderedTasks.last()
-
-    // After dragging A to C, A should swap with C
-    // The exact behavior depends on implementation, but order should change
     const taskTexts: string[] = []
     for (let i = 0; i < 3; i++) {
       const text = await reorderedTasks.nth(i).locator('[data-testid^="task-text-"]').textContent()
       taskTexts.push(text || '')
     }
 
-    // Order should have changed from original [A, B, C]
-    expect(taskTexts.join(',')).not.toBe('Task A,Task B,Task C')
+    // Verify insert behavior: A moved to bottom, B and C shifted up
+    expect(taskTexts).toEqual(['Task B', 'Task C', 'Task A'])
   })
 
   test('should persist reordered tasks after page reload', async ({ page }) => {
@@ -77,7 +119,7 @@ test.describe('Task Drag and Drop', () => {
     const firstTask = page.locator('[data-testid^="task-item-"]').filter({ hasText: 'First' })
     const secondTask = page.locator('[data-testid^="task-item-"]').filter({ hasText: 'Second' })
 
-    // Drag First to Second's position (swap them)
+    // Drag First to Second's position (insert behavior)
     await firstTask.dragTo(secondTask)
 
     // Wait for reorder and save

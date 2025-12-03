@@ -19,7 +19,10 @@ export const STORAGE_KEYS = {
   timer: 'sphinx-focus-timer',
   focusDuration: 'sphinx-focus-focus-duration',
   restDuration: 'sphinx-focus-rest-duration',
-  blurMode: 'sphinx-focus-blur-mode'
+  blurMode: 'sphinx-focus-blur-mode',
+  quickBlur: 'sphinx-focus-quick-blur',
+  taskFadeDuration: 'sphinx-focus-task-fade-duration',
+  taskPosition: 'sphinx-focus-task-position'
 } as const
 
 // ============================================================================

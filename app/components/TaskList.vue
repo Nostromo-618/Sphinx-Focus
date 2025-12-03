@@ -1,6 +1,7 @@
 <script setup lang="ts">
 const STORAGE_KEY = 'sphinx-focus-tasks-encrypted'
 const FADE_DURATION_KEY = 'sphinx-focus-task-fade-duration'
+const TASK_POSITION_KEY = 'sphinx-focus-task-position'
 
 interface Task {
   id: string
@@ -19,6 +20,7 @@ const draggedTaskId = ref<string | null>(null)
 const dragOverTaskId = ref<string | null>(null)
 const isLoading = ref(true)
 const fadeDuration = ref(55)
+const taskPosition = ref<'bottom' | 'top'>('bottom')
 const taskOpacities = ref<Record<string, number>>({})
 
 // Load fade duration from localStorage
@@ -33,8 +35,19 @@ function loadFadeDuration(): number {
   }
 }
 
-// Watch for fade duration changes
-function watchFadeDuration() {
+// Load task position from localStorage
+function loadTaskPosition(): 'bottom' | 'top' {
+  if (import.meta.server) return 'bottom'
+  try {
+    const stored = localStorage.getItem(TASK_POSITION_KEY)
+    return stored === 'top' ? 'top' : 'bottom'
+  } catch {
+    return 'bottom'
+  }
+}
+
+// Watch for settings changes
+function watchSettings() {
   if (import.meta.server) return
   const handleStorageChange = (e: StorageEvent) => {
     if (e.key === FADE_DURATION_KEY && e.newValue) {
@@ -43,6 +56,9 @@ function watchFadeDuration() {
         fadeDuration.value = value
       }
     }
+    if (e.key === TASK_POSITION_KEY && e.newValue) {
+      taskPosition.value = e.newValue === 'top' ? 'top' : 'bottom'
+    }
   }
   window.addEventListener('storage', handleStorageChange)
   onUnmounted(() => {
@@ -50,9 +66,10 @@ function watchFadeDuration() {
   })
 }
 
-// Initialize fade duration
+// Initialize settings
 fadeDuration.value = loadFadeDuration()
-watchFadeDuration()
+taskPosition.value = loadTaskPosition()
+watchSettings()
 
 // Load tasks when unlocked
 watch(isUnlocked, async (unlocked) => {
@@ -132,16 +149,26 @@ function getNextOrder(): number {
   return Math.max(...tasks.value.map(t => t.order)) + 1
 }
 
+function getMinOrder(): number {
+  if (tasks.value.length === 0) return 0
+  return Math.min(...tasks.value.map(t => t.order)) - 1
+}
+
 function addTask() {
   if (!newTaskText.value.trim()) {
     return
   }
 
+  // Get order based on position setting
+  const order = taskPosition.value === 'top'
+    ? getMinOrder()
+    : getNextOrder()
+
   tasks.value.push({
     id: generateId(),
     text: newTaskText.value.trim(),
     completed: false,
-    order: getNextOrder()
+    order
   })
 
   newTaskText.value = ''
@@ -212,26 +239,34 @@ function handleDrop(event: DragEvent, targetTaskId: string) {
 
   if (!draggedTaskId.value || draggedTaskId.value === targetTaskId) {
     draggedTaskId.value = null
+    dragOverTaskId.value = null
     return
   }
 
-  const draggedIndex = tasks.value.findIndex(task => task.id === draggedTaskId.value)
-  const targetIndex = tasks.value.findIndex(task => task.id === targetTaskId)
+  const draggedTask = tasks.value.find(t => t.id === draggedTaskId.value)
+  const targetTask = tasks.value.find(t => t.id === targetTaskId)
 
-  if (draggedIndex !== -1 && targetIndex !== -1) {
-    // Swap orders
-    const draggedTask = tasks.value[draggedIndex]
-    const targetTask = tasks.value[targetIndex]
+  if (draggedTask && targetTask) {
+    const oldOrder = draggedTask.order
+    const newOrder = targetTask.order
 
-    if (draggedTask && targetTask) {
-      const draggedOrder = draggedTask.order
-      const targetOrder = targetTask.order
-
-      draggedTask.order = targetOrder
-      targetTask.order = draggedOrder
-
-      sortTasks()
+    if (oldOrder < newOrder) {
+      // Dragging DOWN: shift intermediate tasks up
+      tasks.value.forEach(t => {
+        if (t.order > oldOrder && t.order <= newOrder) {
+          t.order--
+        }
+      })
+    } else {
+      // Dragging UP: shift intermediate tasks down
+      tasks.value.forEach(t => {
+        if (t.order >= newOrder && t.order < oldOrder) {
+          t.order++
+        }
+      })
     }
+    draggedTask.order = newOrder
+    sortTasks()
   }
 
   draggedTaskId.value = null
