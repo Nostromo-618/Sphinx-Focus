@@ -18,7 +18,7 @@
     "test:chromium": "playwright test --project=chromium"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.77",
+    "@iconify-json/lucide": "^1.2.79",
     "@iconify-json/simple-icons": "^1.2.61",
     "@nuxt/icon": "^2.1.0",
     "@nuxt/ui": "^4.2.1",
@@ -30,7 +30,7 @@
     "@playwright/test": "^1.57.0",
     "eslint": "^9.39.1",
     "typescript": "^5.9.3",
-    "vue-tsc": "^3.1.5"
+    "vue-tsc": "^3.1.6"
   },
   "packageManager": "pnpm@10.19.0"
 }
