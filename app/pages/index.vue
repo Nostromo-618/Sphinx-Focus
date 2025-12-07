@@ -1,43 +1,21 @@
 <script setup lang="ts">
-const QUICK_BLUR_KEY = 'sphinx-focus-quick-blur'
+const { settings, updateSetting } = useEncryptedSettings()
 
-// Load quick blur state from localStorage
-function loadQuickBlur(): boolean {
-  if (import.meta.server) return false
-  try {
-    const stored = localStorage.getItem(QUICK_BLUR_KEY)
-    return stored === 'true'
-  } catch {
-    return false
-  }
-}
+// Manual blur override state - derived from encrypted settings
+const manualBlurEnabled = computed(() => settings.quickBlur)
 
-// Manual blur override state (persisted)
-// This represents the user's manual preference for blur
-// Initialize with false on SSR, load actual value on client mount
-const manualBlurEnabled = ref(false)
+// Blur mode setting from encrypted settings (reactive)
+const blurModeEnabled = computed(() => settings.blurMode)
 
-// Load persisted state on client mount
-onMounted(() => {
-  manualBlurEnabled.value = loadQuickBlur()
-})
-
-function saveManualBlur() {
-  if (!import.meta.server) {
-    try {
-      localStorage.setItem(QUICK_BLUR_KEY, manualBlurEnabled.value.toString())
-    } catch (error) {
-      console.error('Failed to save quick blur state:', error)
-    }
-  }
+function saveManualBlur(value: boolean) {
+  updateSetting('quickBlur', value)
 }
 
 function toggleTaskListBlur() {
   // Toggle based on current visual state, not just the manual flag
   // If currently blurred (for any reason), unblur. If not blurred, blur.
   const currentlyBlurred = taskListBlurred.value
-  manualBlurEnabled.value = !currentlyBlurred
-  saveManualBlur()
+  saveManualBlur(!currentlyBlurred)
 }
 
 const focusTimerRef = ref<{
@@ -116,34 +94,39 @@ const isRestMode = computed(() => {
   return timer.mode === 'rest' && (timer.state === 'running' || timer.state === 'paused')
 })
 
-// Automatic blur: active when focus mode is running and blur mode is enabled in settings
-const autoBlurActive = computed(() => {
-  const timer = focusTimerRef.value
-  if (!timer) return false
-  return timer.mode === 'focus' && timer.state === 'running' && timer.blurModeEnabled
-})
-
 // Combined task list blur state:
+// - If blur mode is disabled: never blur
+// - If timer is not running: never blur (only blur during active focus sessions)
 // - If auto-blur is active: blur is ON unless manually turned OFF
-// - If auto-blur is not active: blur follows manual toggle
-// Logic: (auto-blur active OR manual enabled) - but manual can override auto
 const taskListBlurred = computed(() => {
-  if (autoBlurActive.value) {
-    // When auto-blur is active, manualBlurEnabled controls whether to keep it or override
-    // Default should be true (keep blur), user can toggle to false (unblur)
-    return manualBlurEnabled.value
+  const timer = focusTimerRef.value
+  // If blur mode is disabled in settings, never blur
+  if (!blurModeEnabled.value) {
+    return false
   }
-  // When auto-blur is not active, manual toggle controls directly
+
+  // Only blur when timer is actively running (not idle or paused)
+  if (!timer || timer.state !== 'running' || timer.mode !== 'focus') {
+    return false
+  }
+
+  // When auto-blur is active, manualBlurEnabled controls whether to keep it or override
   return manualBlurEnabled.value
 })
 
-// When auto-blur becomes active, set manual to true so blur is on by default
-// When auto-blur becomes inactive, we keep the manual state as-is
-watch(autoBlurActive, (isActive, wasActive) => {
-  if (isActive && !wasActive) {
-    // Auto-blur just activated - enable blur by default
-    manualBlurEnabled.value = true
-    saveManualBlur()
+// Show quick blur button only when focus mode is running with blur enabled
+const showQuickBlurButton = computed(() => {
+  const timer = focusTimerRef.value
+  if (!timer) return false
+  return timer.mode === 'focus' && timer.state === 'running' && blurModeEnabled.value && taskListBlurred.value
+})
+
+// Reset quickBlur to default when timer is reset (goes back to idle)
+// Only if blur mode is enabled
+watch(() => focusTimerRef.value?.state, (newState, oldState) => {
+  if (oldState && oldState !== 'idle' && newState === 'idle' && blurModeEnabled.value) {
+    // Timer was reset - restore default blur state (only if blur mode is enabled)
+    saveManualBlur(true)
   }
 })
 
@@ -153,7 +136,8 @@ const isBlurred = computed(() => {
   if (!timer) return false
   // Focus mode: show overlay when task list is blurred
   const isFocusBlur = timer.mode === 'focus' && timer.state === 'running' && taskListBlurred.value
-  const isRestStage1Blur = timer.mode === 'rest' && timer.state === 'running' && restStage.value === 1
+  // Rest mode stage 1: only blur if blur mode is enabled
+  const isRestStage1Blur = timer.mode === 'rest' && timer.state === 'running' && restStage.value === 1 && blurModeEnabled.value
   return isFocusBlur || isRestStage1Blur
 })
 
@@ -245,6 +229,7 @@ function handleReset() {
                   {{ timerTitle }}
                 </h3>
                 <UButton
+                  v-if="showQuickBlurButton"
                   :icon="taskListBlurred ? 'i-lucide-eye-off' : 'i-lucide-eye'"
                   color="neutral"
                   variant="ghost"
@@ -270,12 +255,12 @@ function handleReset() {
             </div>
           </UCard>
 
-          <!-- Task List Card - blurred via quick toggle or during rest stage 1 -->
+          <!-- Task List Card - blurred via quick toggle or during rest stage 1 (if blur mode enabled) -->
           <UCard
             class="relative z-10 transition-all duration-1000"
             :class="{
               'blur-md opacity-50': taskListBlurred && restStage === 0,
-              'blur-xl opacity-20': restStage === 1
+              'blur-xl opacity-20': restStage === 1 && blurModeEnabled
             }"
           >
             <template #header>
@@ -308,10 +293,10 @@ function handleReset() {
       />
     </Transition>
 
-    <!-- Rest mode stage 1 overlay - subtle background dim, timer stays visible -->
+    <!-- Rest mode stage 1 overlay - subtle background dim, timer stays visible (only if blur mode enabled) -->
     <Transition name="rest-stage1">
       <div
-        v-if="restStage === 1"
+        v-if="restStage === 1 && blurModeEnabled"
         class="fixed inset-0 bg-background/40 z-40 pointer-events-none transition-all"
         :class="{
           'duration-1000': !isExiting,

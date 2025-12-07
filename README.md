@@ -61,9 +61,23 @@ pnpm generate
 
 ## Security
 
-All dependencies are audited (2025-11-30) using [AuditJS](https://github.com/sonatype-nexus-community/auditjs) with Sonatype OSS Index:
+All dependencies are audited (2025-12-07) using [AuditJS](https://github.com/sonatype-nexus-community/auditjs) with Sonatype OSS Index:
 
 ```
+|\   __  \ |\  \|\  \ |\   ___ \ |\  \ |\___   ___\    |\  \ |\   ____\     
+\ \  \|\  \\ \  \\\  \\ \  \_|\ \\ \  \\|___ \  \_|    \ \  \\ \  \___|_    
+ \ \   __  \\ \  \\\  \\ \  \ \\ \\ \  \    \ \  \   __ \ \  \\ \_____  \   
+  \ \  \ \  \\ \  \\\  \\ \  \_\\ \\ \  \    \ \  \ |\  \\_\  \\|____|\  \  
+   \ \__\ \__\\ \_______\\ \_______\\ \__\    \ \__\\ \________\ ____\_\  \ 
+    \|__|\|__| \|_______| \|_______| \|__|     \|__| \|________||\_________\
+                                                                \|_________|
+                                                                            
+                                                                            
+  _      _                       _   _              
+ /_)    /_`_  _  _ _/_   _  _   (/  /_`_._  _   _/ _
+/_)/_/ ._//_// //_|/ /_//_//_' (_X /  ///_'/ //_/_\ 
+   _/                _//                            
+
   AuditJS version: 4.0.47
 
 ✔ Starting application
@@ -76,9 +90,9 @@ All dependencies are audited (2025-11-30) using [AuditJS](https://github.com/son
   Sonabot here, beep boop beep boop, here are your Sonatype OSS Index results:
   Total dependencies audited: 6
 
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-[1/6] - pkg:npm/@iconify-json/lucide@1.2.77 - No vulnerabilities found!
-[2/6] - pkg:npm/@iconify-json/simple-icons@1.2.60 - No vulnerabilities found!
+--------------------------------------------------------------------------------------------------------------------------------------------
+[1/6] - pkg:npm/@iconify-json/lucide@1.2.79 - No vulnerabilities found!
+[2/6] - pkg:npm/@iconify-json/simple-icons@1.2.61 - No vulnerabilities found!
 [3/6] - pkg:npm/@nuxt/icon@2.1.0 - No vulnerabilities found!
 [4/6] - pkg:npm/@nuxt/ui@4.2.1 - No vulnerabilities found!
 [5/6] - pkg:npm/animejs@4.2.2 - No vulnerabilities found!

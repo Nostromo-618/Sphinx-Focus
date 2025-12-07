@@ -42,11 +42,9 @@ test.describe('Task Fade-Away Feature', () => {
     // Modal should close
     await expect(page.getByRole('dialog')).not.toBeVisible()
 
-    // Verify setting was saved
-    const stored = await page.evaluate((key) => {
-      return localStorage.getItem(key)
-    }, 'sphinx-focus-task-fade-duration')
-    expect(stored).toBe('10')
+    // Verify setting was saved (settings are now encrypted, verify by reopening modal)
+    await page.getByTestId('task-settings-button').click()
+    await expect(page.getByLabel('Fade Duration (seconds)')).toHaveValue('10')
   })
 
   test('should validate fade duration range (1-180 seconds)', async ({ page }) => {
@@ -118,11 +116,12 @@ test.describe('Task Fade-Away Feature', () => {
 
   test('should delete task after fade duration completes', async ({ page }) => {
     // Set a very short fade duration for testing (2 seconds)
-    await page.evaluate(() => {
-      localStorage.setItem('sphinx-focus-task-fade-duration', '2')
-    })
-    await page.reload()
-    await waitForAppReady(page)
+    await page.getByTestId('task-settings-button').click()
+    const fadeInput = page.getByLabel('Fade Duration (seconds)')
+    await fadeInput.clear()
+    await fadeInput.fill('2')
+    await page.getByRole('button', { name: 'Save' }).click()
+    await page.waitForTimeout(300)
 
     // Add a task
     await page.getByTestId('task-input').fill('Task to disappear')
@@ -281,9 +280,15 @@ test.describe('Task Fade-Away Feature', () => {
     await fadeInput.fill('30')
     await page.getByRole('button', { name: 'Save' }).click()
 
+    // Wait for settings to be saved (encrypted settings are saved with debounce)
+    await page.waitForTimeout(500)
+
     // Reload page
     await page.reload()
     await waitForAppReady(page)
+
+    // Wait for encrypted settings to load
+    await page.waitForTimeout(500)
 
     // Verify setting persisted
     await page.getByTestId('task-settings-button').click()
@@ -292,11 +297,12 @@ test.describe('Task Fade-Away Feature', () => {
 
   test('should use persisted fade duration for new tasks', async ({ page }) => {
     // Set a short fade duration
-    await page.evaluate(() => {
-      localStorage.setItem('sphinx-focus-task-fade-duration', '2')
-    })
-    await page.reload()
-    await waitForAppReady(page)
+    await page.getByTestId('task-settings-button').click()
+    const fadeInput = page.getByLabel('Fade Duration (seconds)')
+    await fadeInput.clear()
+    await fadeInput.fill('2')
+    await page.getByRole('button', { name: 'Save' }).click()
+    await page.waitForTimeout(300)
 
     // Add and complete a task
     await page.getByTestId('task-input').fill('Quick fade task')

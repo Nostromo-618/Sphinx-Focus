@@ -1,112 +1,36 @@
 <script setup lang="ts">
-const FOCUS_DURATION_KEY = 'sphinx-focus-focus-duration'
-const REST_DURATION_KEY = 'sphinx-focus-rest-duration'
-const BLUR_MODE_KEY = 'sphinx-focus-blur-mode'
-
-// Load settings from localStorage
-function loadFocusDuration(): number {
-  if (import.meta.server) return 25 * 60
-  try {
-    const stored = localStorage.getItem(FOCUS_DURATION_KEY)
-    const value = stored ? parseInt(stored, 10) : 25
-    const minutes = isNaN(value) || value < 1 || value > 99 ? 25 : value
-    return minutes * 60
-  } catch {
-    return 25 * 60
-  }
-}
-
-function loadRestDuration(): number {
-  if (import.meta.server) return 5 * 60
-  try {
-    const stored = localStorage.getItem(REST_DURATION_KEY)
-    const value = stored ? parseInt(stored, 10) : 5
-    const minutes = isNaN(value) || value < 1 || value > 99 ? 5 : value
-    return minutes * 60
-  } catch {
-    return 5 * 60
-  }
-}
-
-function loadBlurMode(): boolean {
-  if (import.meta.server) return true
-  try {
-    const stored = localStorage.getItem(BLUR_MODE_KEY)
-    return stored !== null ? stored === 'true' : true // Default: enabled
-  } catch {
-    return true
-  }
-}
-
-// Reactive durations that update when settings change
-const focusDuration = ref(loadFocusDuration())
-const restDuration = ref(loadRestDuration())
-const blurModeEnabled = ref(loadBlurMode())
-
-// Watch for settings changes in localStorage (from settings modal)
-if (!import.meta.server) {
-  const checkSettings = () => {
-    const newFocusDuration = loadFocusDuration()
-    const newRestDuration = loadRestDuration()
-    const newBlurMode = loadBlurMode()
-
-    // Blur mode can be updated immediately
-    blurModeEnabled.value = newBlurMode
-
-    // Durations only update if timer is idle (apply to next session)
-    if (state.value === 'idle') {
-      focusDuration.value = newFocusDuration
-      restDuration.value = newRestDuration
-      // Update time remaining if we're in the corresponding mode
-      if (mode.value === 'focus') {
-        timeRemaining.value = focusDuration.value
-      } else if (mode.value === 'rest') {
-        timeRemaining.value = restDuration.value
-      }
-    }
-  }
-
-  // Check for settings changes periodically
-  const settingsCheckInterval = setInterval(() => {
-    checkSettings()
-  }, 500)
-
-  // Also listen for storage events (when settings modal saves)
-  const handleStorageChange = (e: StorageEvent) => {
-    if (e.key === FOCUS_DURATION_KEY || e.key === REST_DURATION_KEY || e.key === BLUR_MODE_KEY) {
-      checkSettings()
-    }
-  }
-  window.addEventListener('storage', handleStorageChange)
-
-  onUnmounted(() => {
-    clearInterval(settingsCheckInterval)
-    window.removeEventListener('storage', handleStorageChange)
-  })
-}
-
 type TimerMode = 'focus' | 'rest'
-type TimerState = 'idle' | 'running' | 'paused'
+type TimerStateValue = 'idle' | 'running' | 'paused'
 
+// Timer state is stored UNENCRYPTED for performance (updates every second)
 const TIMER_STORAGE_KEY = 'sphinx-focus-timer'
 
 interface StoredTimerState {
   mode: TimerMode
-  state: TimerState
+  state: TimerStateValue
   timeRemaining: number
-  lastUpdateTimestamp: number // Unix timestamp in milliseconds
+  lastUpdateTimestamp: number
 }
-
-const mode = ref<TimerMode>('focus')
-const state = ref<TimerState>('idle')
-const timeRemaining = ref(focusDuration.value)
-const intervalId = ref<ReturnType<typeof setInterval> | null>(null)
-const showCompletionBanner = ref(false)
 
 const toast = useToast()
 const { isUnlocked } = useSecuritySettings()
+const { settings, isSettingsLoaded } = useEncryptedSettings()
 
-// Save timer state to localStorage
+// Timer state
+const mode = ref<TimerMode>('focus')
+const state = ref<TimerStateValue>('idle')
+const intervalId = ref<ReturnType<typeof setInterval> | null>(null)
+const showCompletionBanner = ref(false)
+
+// Derived durations from encrypted settings (in seconds)
+const focusDuration = computed(() => settings.focusDuration * 60)
+const restDuration = computed(() => settings.restDuration * 60)
+const blurModeEnabled = computed(() => settings.blurMode)
+
+// Time remaining - initialized to focus duration
+const timeRemaining = ref(25 * 60) // Default, will be updated when settings load
+
+// Save timer state to localStorage (unencrypted for performance)
 function saveTimerState() {
   if (import.meta.server) return
 
@@ -122,6 +46,12 @@ function saveTimerState() {
   } catch (error) {
     console.error('Failed to save timer state:', error)
   }
+}
+
+// Clear timer state from localStorage
+function clearTimerState() {
+  if (import.meta.server) return
+  localStorage.removeItem(TIMER_STORAGE_KEY)
 }
 
 // Load timer state from localStorage and resume if needed
@@ -143,7 +73,7 @@ function loadTimerState() {
       || typeof timerState.lastUpdateTimestamp !== 'number'
     ) {
       // Invalid data - clear and start fresh
-      localStorage.removeItem(TIMER_STORAGE_KEY)
+      clearTimerState()
       return
     }
 
@@ -154,13 +84,13 @@ function loadTimerState() {
     // If timer was running, calculate elapsed time
     if (timerState.state === 'running') {
       const now = Date.now()
-      const elapsed = Math.floor((now - timerState.lastUpdateTimestamp) / 1000) // elapsed seconds
+      const elapsed = Math.floor((now - timerState.lastUpdateTimestamp) / 1000)
       const adjustedTimeRemaining = timerState.timeRemaining - elapsed
 
       if (adjustedTimeRemaining <= 0) {
-        // Timer expired while page was closed - complete the session
+        // Timer expired while page was closed - complete immediately without delays
         timeRemaining.value = 0
-        completeSession()
+        completeSessionImmediate()
         return
       } else {
         // Timer still has time - restore and resume
@@ -170,7 +100,7 @@ function loadTimerState() {
         intervalId.value = setInterval(() => {
           if (timeRemaining.value > 0) {
             timeRemaining.value--
-            saveTimerState() // Save every second
+            saveTimerState()
           } else {
             completeSession()
           }
@@ -183,19 +113,40 @@ function loadTimerState() {
   } catch (error) {
     // Corrupted data - clear and start fresh
     console.error('Failed to load timer state:', error)
-    localStorage.removeItem(TIMER_STORAGE_KEY)
+    clearTimerState()
   }
 }
 
-// Watch for state changes and save
+// Watch for settings to load and update time remaining if no saved state
+watch(isSettingsLoaded, (loaded) => {
+  if (loaded) {
+    // Only update time remaining if there's no saved timer state and timer is idle
+    const stored = localStorage.getItem(TIMER_STORAGE_KEY)
+    if (!stored && state.value === 'idle') {
+      timeRemaining.value = focusDuration.value
+    }
+  }
+}, { immediate: true })
+
+// Watch for duration changes when timer is idle
+watch([focusDuration, restDuration], ([newFocus, newRest]) => {
+  if (state.value === 'idle') {
+    // Update time remaining based on current mode
+    if (mode.value === 'focus') {
+      timeRemaining.value = newFocus
+    } else {
+      timeRemaining.value = newRest
+    }
+  }
+})
+
+// Watch for mode/state changes and save
 watch([mode, state], () => {
   saveTimerState()
 }, { immediate: false })
 
 // Reset timer when data is cleared (isUnlocked becomes false)
 watch(isUnlocked, (unlocked, wasUnlocked) => {
-  // Only reset if transitioning from unlocked to locked (data cleared)
-  // wasUnlocked will be undefined on first run, so we check if it was previously true
   if (wasUnlocked === true && !unlocked) {
     // Clear any running interval
     if (intervalId.value) {
@@ -205,16 +156,17 @@ watch(isUnlocked, (unlocked, wasUnlocked) => {
     // Reset timer to default state
     mode.value = 'focus'
     state.value = 'idle'
-    timeRemaining.value = focusDuration.value
+    timeRemaining.value = 25 * 60 // Default focus duration
     showCompletionBanner.value = false
   }
 })
 
-// Request notification permission on mount and load timer state
+// Request notification permission and load timer state on mount
 onMounted(() => {
   if ('Notification' in window && Notification.permission === 'default') {
     Notification.requestPermission()
   }
+  // Load timer state (unencrypted, loads immediately without waiting for settings)
   loadTimerState()
 })
 
@@ -295,11 +247,11 @@ function startTimer() {
   }
 
   state.value = 'running'
-  saveTimerState() // Save immediately when starting
+  saveTimerState()
   intervalId.value = setInterval(() => {
     if (timeRemaining.value > 0) {
       timeRemaining.value--
-      saveTimerState() // Save every second
+      saveTimerState()
     } else {
       completeSession()
     }
@@ -312,17 +264,14 @@ function pauseTimer() {
     intervalId.value = null
   }
   state.value = 'paused'
-  saveTimerState() // Save when paused
+  saveTimerState()
 }
 
 function resetTimer() {
   pauseTimer()
   state.value = 'idle'
   timeRemaining.value = totalTime.value
-  // Clear localStorage when reset to idle
-  if (!import.meta.server) {
-    localStorage.removeItem(TIMER_STORAGE_KEY)
-  }
+  clearTimerState()
 }
 
 function switchMode() {
@@ -337,7 +286,21 @@ function switchMode() {
   }
 
   state.value = 'idle'
-  saveTimerState() // Save when mode changes
+  saveTimerState()
+}
+
+function completeSessionImmediate() {
+  // Immediate completion (used when timer expired during page reload)
+  // No delays, no notifications - just switch modes
+  const completedMode = mode.value
+
+  if (completedMode === 'focus') {
+    // Switch to rest mode immediately
+    switchMode()
+  } else {
+    // Switch back to focus mode immediately
+    switchMode()
+  }
 }
 
 function completeSession() {

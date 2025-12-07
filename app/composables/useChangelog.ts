@@ -12,6 +12,21 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.3.0',
+    date: '2025-12-07',
+    changes: {
+      added: [
+        'Global theme customization with 17 primary and 5 neutral color options',
+        'Theme picker popover accessible from header (swatch-book icon)',
+        'Theme preferences persist across sessions',
+        'Reset to defaults option in theme picker'
+      ],
+      changed: [
+        'Rest mode overlay now uses global theme colors instead of hardcoded green'
+      ]
+    }
+  },
+  {
     version: '2.2.0',
     date: '2025-12-03',
     changes: {
@@ -170,7 +185,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.2.0',
+    getLatestVersion: () => changelogData[0]?.version || '2.3.0',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }

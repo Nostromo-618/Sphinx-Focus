@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
-import { clearStorage, bypassSecuritySetup, waitForAppReady, STORAGE_KEYS, getStorageItem } from '../../fixtures/test-utils'
+import { clearStorage, bypassSecuritySetup, waitForAppReady } from '../../fixtures/test-utils'
 
 test.describe('Timer Settings', () => {
   test.beforeEach(async ({ page }) => {
@@ -39,12 +39,8 @@ test.describe('Timer Settings', () => {
     // Modal should close
     await expect(page.getByText('Timer Settings')).not.toBeVisible()
 
-    // Timer should show new duration
+    // Timer should show new duration (settings are now stored encrypted)
     await expect(page.getByTestId('timer-display')).toHaveText('30:00')
-
-    // Verify saved to localStorage
-    const stored = await getStorageItem(page, STORAGE_KEYS.focusDuration)
-    expect(stored).toBe('30')
   })
 
   test('should save custom rest duration', async ({ page }) => {
@@ -121,9 +117,14 @@ test.describe('Timer Settings', () => {
     // Save
     await page.getByRole('button', { name: 'Save' }).click()
 
-    // Verify saved
-    const stored = await getStorageItem(page, STORAGE_KEYS.blurMode)
-    expect(stored).toBe('false')
+    // Verify setting is applied: start timer and check task list is NOT blurred
+    await page.getByTestId('timer-start').click()
+    await page.waitForTimeout(300)
+
+    // Get Task List card (second card in grid)
+    const taskCard = page.locator('.grid > div').nth(1)
+    // Task list should NOT be blurred since blur mode is disabled
+    await expect(taskCard).not.toHaveClass(/blur-md/)
   })
 
   test('should persist settings across page reloads', async ({ page }) => {
@@ -132,12 +133,18 @@ test.describe('Timer Settings', () => {
     await page.locator('#rest-duration').fill('7')
     await page.getByRole('button', { name: 'Save' }).click()
 
+    // Wait for settings to be saved (encrypted settings are saved with debounce)
+    await page.waitForTimeout(500)
+
     // Reload page
     await page.reload()
     await waitForAppReady(page)
 
+    // Wait for encrypted settings to load
+    await page.waitForTimeout(500)
+
     // Timer should show saved focus duration
-    await expect(page.getByTestId('timer-display')).toHaveText('35:00')
+    await expect(page.getByTestId('timer-display')).toHaveText('35:00', { timeout: 10000 })
 
     // Skip to rest and check
     await page.getByTestId('timer-skip').click()
@@ -202,7 +209,7 @@ test.describe('Blur Mode Effects', () => {
     await expect(taskCard).toHaveClass(/opacity-50/)
   })
 
-  test('should blur task list during rest mode (always)', async ({ page }) => {
+  test('should blur task list during rest mode when blur enabled', async ({ page }) => {
     // Get Task List card (second card in grid)
     const taskCard = getTaskListCard(page)
 
@@ -252,6 +259,29 @@ test.describe('Blur Mode Effects', () => {
     await page.waitForTimeout(300) // Allow transition
 
     // Task List should NOT be blurred (blur disabled)
+    await expect(taskCard).not.toHaveClass(/blur-md/)
+  })
+
+  test('should not blur task list during rest mode when blur disabled', async ({ page }) => {
+    // Disable blur mode
+    await page.getByRole('button', { name: 'Timer Settings' }).click()
+    const blurToggle = page.locator('#blur-mode')
+    await blurToggle.click() // Toggle off
+    await page.getByRole('button', { name: 'Save' }).click()
+
+    // Get Task List card (second card in grid)
+    const taskCard = getTaskListCard(page)
+
+    // Skip to rest mode
+    await page.getByTestId('timer-skip').click()
+    await expect(page.getByTestId('timer-mode')).toHaveText('Rest')
+
+    // Start rest timer
+    await page.getByTestId('timer-start').click()
+    await page.waitForTimeout(500) // Allow time for rest mode stage transition
+
+    // Task List should NOT be blurred (blur disabled)
+    await expect(taskCard).not.toHaveClass(/blur-xl/)
     await expect(taskCard).not.toHaveClass(/blur-md/)
   })
 })

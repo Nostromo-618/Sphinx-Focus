@@ -3,39 +3,25 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const FADE_DURATION_KEY = 'sphinx-focus-task-fade-duration'
-const TASK_POSITION_KEY = 'sphinx-focus-task-position'
+const { settings, updateSettings, isSettingsLoaded } = useEncryptedSettings()
 
-// Load current setting from localStorage
-function loadFadeDuration(): number {
-  if (import.meta.server) return 55
-  try {
-    const stored = localStorage.getItem(FADE_DURATION_KEY)
-    const value = stored ? parseInt(stored, 10) : 55
-    return isNaN(value) || value < 1 || value > 180 ? 55 : value
-  } catch {
-    return 55
-  }
-}
-
-function loadTaskPosition(): 'bottom' | 'top' {
-  if (import.meta.server) return 'bottom'
-  try {
-    const stored = localStorage.getItem(TASK_POSITION_KEY)
-    return stored === 'top' ? 'top' : 'bottom'
-  } catch {
-    return 'bottom'
-  }
-}
-
-const fadeDuration = ref(loadFadeDuration())
+// Local form state - initialized from encrypted settings
+const fadeDuration = ref(55)
 const fadeError = ref('')
-const taskPosition = ref<'bottom' | 'top'>(loadTaskPosition())
+const taskPosition = ref<'bottom' | 'top'>('bottom')
 
 const positionOptions = [
   { value: 'bottom', label: 'Bottom', description: 'New tasks appear at the end of the list' },
   { value: 'top', label: 'Top', description: 'New tasks appear at the beginning of the list' }
 ]
+
+// Load current settings when they become available
+watch(isSettingsLoaded, (loaded) => {
+  if (loaded) {
+    fadeDuration.value = settings.taskFadeDuration
+    taskPosition.value = settings.taskPosition
+  }
+}, { immediate: true })
 
 function validateFadeDuration() {
   const value = fadeDuration.value
@@ -52,26 +38,13 @@ function saveSettings() {
     return
   }
 
-  if (import.meta.server) return
+  // Update all settings at once
+  updateSettings({
+    taskFadeDuration: fadeDuration.value,
+    taskPosition: taskPosition.value
+  })
 
-  try {
-    localStorage.setItem(FADE_DURATION_KEY, fadeDuration.value.toString())
-    localStorage.setItem(TASK_POSITION_KEY, taskPosition.value)
-
-    // Trigger storage events so TaskList can pick up changes
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: FADE_DURATION_KEY,
-      newValue: fadeDuration.value.toString()
-    }))
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: TASK_POSITION_KEY,
-      newValue: taskPosition.value
-    }))
-
-    emit('close')
-  } catch (error) {
-    console.error('Failed to save settings:', error)
-  }
+  emit('close')
 }
 
 function handleClose(open?: boolean) {

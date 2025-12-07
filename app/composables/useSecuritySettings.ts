@@ -3,6 +3,8 @@
  * Manages encryption mode, session keys, and security state
  */
 
+import type { EncryptedSettings } from './useEncryptedSettings'
+
 export type SecurityMode = 'pin' | 'auto' | 'none'
 
 interface SecurityConfig {
@@ -12,7 +14,26 @@ interface SecurityConfig {
   pinHash?: string // Hash to verify PIN (not the PIN itself)
 }
 
+// Old localStorage keys (for migration of settings that should be encrypted)
+const OLD_ENCRYPTED_KEYS = {
+  focusDuration: 'sphinx-focus-focus-duration',
+  restDuration: 'sphinx-focus-rest-duration',
+  blurMode: 'sphinx-focus-blur-mode',
+  quickBlur: 'sphinx-focus-quick-blur',
+  taskFadeDuration: 'sphinx-focus-task-fade-duration',
+  taskPosition: 'sphinx-focus-task-position',
+  tasks: 'sphinx-focus-tasks'
+}
+
+// Unencrypted storage keys (kept for performance/UX reasons)
+const UNENCRYPTED_KEYS = {
+  theme: 'sphinx-focus-theme',
+  timer: 'sphinx-focus-timer'
+}
+
 const STORAGE_KEY = 'sphinx-focus-security'
+const SETTINGS_ENCRYPTED_KEY = 'sphinx-focus-settings-encrypted'
+const TASKS_ENCRYPTED_KEY = 'sphinx-focus-tasks-encrypted'
 const _SESSION_KEY_SYMBOL = Symbol('sessionKey')
 
 // In-memory session key (never persisted for PIN mode)
@@ -59,6 +80,91 @@ export function useSecuritySettings() {
   }
 
   /**
+   * Check if there are old unencrypted settings that need migration
+   */
+  function hasOldSettings(): boolean {
+    if (import.meta.server) return false
+
+    return Object.values(OLD_ENCRYPTED_KEYS).some(key => localStorage.getItem(key) !== null)
+  }
+
+  /**
+   * Migrate old unencrypted settings to new encrypted format
+   * Note: Theme and timer state stay unencrypted (for UX/performance)
+   */
+  async function migrateOldSettings(): Promise<void> {
+    if (import.meta.server) return
+    if (!sessionKey) return
+    if (!hasOldSettings()) return
+
+    try {
+      // Read old settings (only those that should be encrypted)
+      const oldFocusDuration = localStorage.getItem(OLD_ENCRYPTED_KEYS.focusDuration)
+      const oldRestDuration = localStorage.getItem(OLD_ENCRYPTED_KEYS.restDuration)
+      const oldBlurMode = localStorage.getItem(OLD_ENCRYPTED_KEYS.blurMode)
+      const oldQuickBlur = localStorage.getItem(OLD_ENCRYPTED_KEYS.quickBlur)
+      const oldTaskFadeDuration = localStorage.getItem(OLD_ENCRYPTED_KEYS.taskFadeDuration)
+      const oldTaskPosition = localStorage.getItem(OLD_ENCRYPTED_KEYS.taskPosition)
+
+      // Build migrated settings (only encrypted settings)
+      const migratedSettings: EncryptedSettings = {
+        focusDuration: 25,
+        restDuration: 5,
+        blurMode: true,
+        quickBlur: false,
+        taskFadeDuration: 55,
+        taskPosition: 'bottom'
+      }
+
+      // Parse old timer settings
+      if (oldFocusDuration) {
+        const value = parseInt(oldFocusDuration, 10)
+        if (!isNaN(value) && value >= 1 && value <= 99) {
+          migratedSettings.focusDuration = value
+        }
+      }
+      if (oldRestDuration) {
+        const value = parseInt(oldRestDuration, 10)
+        if (!isNaN(value) && value >= 1 && value <= 99) {
+          migratedSettings.restDuration = value
+        }
+      }
+      if (oldBlurMode !== null) {
+        migratedSettings.blurMode = oldBlurMode === 'true'
+      }
+      if (oldQuickBlur !== null) {
+        migratedSettings.quickBlur = oldQuickBlur === 'true'
+      }
+
+      // Parse old task settings
+      if (oldTaskFadeDuration) {
+        const value = parseInt(oldTaskFadeDuration, 10)
+        if (!isNaN(value) && value >= 1 && value <= 180) {
+          migratedSettings.taskFadeDuration = value
+        }
+      }
+      if (oldTaskPosition === 'top' || oldTaskPosition === 'bottom') {
+        migratedSettings.taskPosition = oldTaskPosition
+      }
+
+      // Encrypt and save migrated settings
+      const encrypted = await encrypt(JSON.stringify(migratedSettings), sessionKey)
+      localStorage.setItem(SETTINGS_ENCRYPTED_KEY, encrypted)
+
+      // Remove old encrypted keys after successful migration
+      // Note: Theme and timer stay as they're unencrypted by design
+      Object.values(OLD_ENCRYPTED_KEYS).forEach((key) => {
+        localStorage.removeItem(key)
+      })
+
+      console.log('Successfully migrated old settings to encrypted format')
+    } catch (error) {
+      console.error('Failed to migrate old settings:', error)
+      // Don't delete old keys if migration failed
+    }
+  }
+
+  /**
    * Initialize security settings on app load
    */
   async function initialize(): Promise<void> {
@@ -82,6 +188,9 @@ export function useSecuritySettings() {
       try {
         sessionKey = await importKey(config.autoKey)
         isUnlocked.value = true
+
+        // Migrate old settings if they exist
+        await migrateOldSettings()
       } catch {
         // Key corrupted - reset
         clearAllData()
@@ -93,22 +202,33 @@ export function useSecuritySettings() {
   }
 
   /**
-   * Migrate encrypted tasks from old key to new key
+   * Migrate encrypted data (tasks and settings) from old key to new key
    */
   async function migrateEncryptedData(oldKey: CryptoKey, newKey: CryptoKey): Promise<void> {
     if (import.meta.server) return
 
-    const encryptedTasks = localStorage.getItem('sphinx-focus-tasks-encrypted')
-    if (!encryptedTasks) return
+    // Migrate encrypted tasks
+    const encryptedTasks = localStorage.getItem(TASKS_ENCRYPTED_KEY)
+    if (encryptedTasks) {
+      try {
+        const decrypted = await decrypt(encryptedTasks, oldKey)
+        const reEncrypted = await encrypt(decrypted, newKey)
+        localStorage.setItem(TASKS_ENCRYPTED_KEY, reEncrypted)
+      } catch {
+        // If decryption fails, leave it as is
+      }
+    }
 
-    try {
-      // Decrypt with old key, re-encrypt with new key
-      const decrypted = await decrypt(encryptedTasks, oldKey)
-      const reEncrypted = await encrypt(decrypted, newKey)
-      localStorage.setItem('sphinx-focus-tasks-encrypted', reEncrypted)
-    } catch {
-      // If decryption fails (corrupted data or wrong key), leave it as is
-      // The TaskList component will handle the error gracefully
+    // Migrate encrypted settings
+    const encryptedSettings = localStorage.getItem(SETTINGS_ENCRYPTED_KEY)
+    if (encryptedSettings) {
+      try {
+        const decrypted = await decrypt(encryptedSettings, oldKey)
+        const reEncrypted = await encrypt(decrypted, newKey)
+        localStorage.setItem(SETTINGS_ENCRYPTED_KEY, reEncrypted)
+      } catch {
+        // If decryption fails, leave it as is
+      }
     }
   }
 
@@ -137,6 +257,9 @@ export function useSecuritySettings() {
     currentMode.value = 'auto'
     isInitialized.value = true
     isUnlocked.value = true
+
+    // Migrate old unencrypted settings if they exist
+    await migrateOldSettings()
   }
 
   /**
@@ -168,6 +291,9 @@ export function useSecuritySettings() {
     currentMode.value = 'pin'
     isInitialized.value = true
     isUnlocked.value = true
+
+    // Migrate old unencrypted settings if they exist
+    await migrateOldSettings()
   }
 
   /**
@@ -189,6 +315,10 @@ export function useSecuritySettings() {
       if (decrypted === 'sphinx-focus-verified') {
         sessionKey = key
         isUnlocked.value = true
+
+        // Migrate old settings if they exist (edge case: user had old settings before PIN was set)
+        await migrateOldSettings()
+
         return true
       }
     } catch {
@@ -216,7 +346,8 @@ export function useSecuritySettings() {
   }
 
   /**
-   * Clear all data and reset security (for "forgot PIN" flow)
+   * Clear ALL data and reset security (for "forgot PIN" flow or complete reset)
+   * This removes absolutely everything from localStorage related to this app
    */
   function clearAllData(): void {
     if (import.meta.server) return
@@ -224,17 +355,19 @@ export function useSecuritySettings() {
     // Clear security config
     localStorage.removeItem(STORAGE_KEY)
 
-    // Clear encrypted tasks
-    localStorage.removeItem('sphinx-focus-tasks')
-    localStorage.removeItem('sphinx-focus-tasks-encrypted')
+    // Clear encrypted data
+    localStorage.removeItem(TASKS_ENCRYPTED_KEY)
+    localStorage.removeItem(SETTINGS_ENCRYPTED_KEY)
 
-    // Clear timer state
-    localStorage.removeItem('sphinx-focus-timer')
+    // Clear unencrypted data (timer state, theme)
+    Object.values(UNENCRYPTED_KEYS).forEach((key) => {
+      localStorage.removeItem(key)
+    })
 
-    // Clear timer settings
-    localStorage.removeItem('sphinx-focus-focus-duration')
-    localStorage.removeItem('sphinx-focus-rest-duration')
-    localStorage.removeItem('sphinx-focus-blur-mode')
+    // Clear any remaining old keys (in case migration was incomplete)
+    Object.values(OLD_ENCRYPTED_KEYS).forEach((key) => {
+      localStorage.removeItem(key)
+    })
 
     // Reset state
     sessionKey = null

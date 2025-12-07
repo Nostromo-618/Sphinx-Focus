@@ -1,10 +1,11 @@
 /**
  * Theme settings composable
  * Manages primary/neutral color preferences with localStorage persistence
+ *
+ * Note: Theme is stored UNENCRYPTED so colors are visible on the PIN entry screen
  */
 
-export type PrimaryColor =
-  | 'red' | 'orange' | 'amber' | 'yellow' | 'lime' | 'green'
+export type PrimaryColor = 'red' | 'orange' | 'amber' | 'yellow' | 'lime' | 'green'
   | 'emerald' | 'teal' | 'cyan' | 'sky' | 'blue' | 'indigo'
   | 'violet' | 'purple' | 'fuchsia' | 'pink' | 'rose'
 
@@ -23,7 +24,7 @@ const DEFAULT_THEME: ThemeConfig = {
 }
 
 // Primary colors available for selection
-export const PRIMARY_COLORS: { value: PrimaryColor; label: string }[] = [
+export const PRIMARY_COLORS: { value: PrimaryColor, label: string }[] = [
   { value: 'red', label: 'Red' },
   { value: 'orange', label: 'Orange' },
   { value: 'amber', label: 'Amber' },
@@ -44,7 +45,7 @@ export const PRIMARY_COLORS: { value: PrimaryColor; label: string }[] = [
 ]
 
 // Neutral colors available for selection
-export const NEUTRAL_COLORS: { value: NeutralColor; label: string }[] = [
+export const NEUTRAL_COLORS: { value: NeutralColor, label: string }[] = [
   { value: 'slate', label: 'Slate' },
   { value: 'gray', label: 'Gray' },
   { value: 'zinc', label: 'Zinc' },

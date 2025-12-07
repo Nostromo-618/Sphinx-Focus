@@ -3,49 +3,24 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const FOCUS_DURATION_KEY = 'sphinx-focus-focus-duration'
-const REST_DURATION_KEY = 'sphinx-focus-rest-duration'
-const BLUR_MODE_KEY = 'sphinx-focus-blur-mode'
+const { settings, updateSettings, isSettingsLoaded } = useEncryptedSettings()
 
-// Load current settings from localStorage
-function loadFocusDuration(): number {
-  if (import.meta.server) return 25
-  try {
-    const stored = localStorage.getItem(FOCUS_DURATION_KEY)
-    const value = stored ? parseInt(stored, 10) : 25
-    return isNaN(value) || value < 1 || value > 99 ? 25 : value
-  } catch {
-    return 25
-  }
-}
-
-function loadRestDuration(): number {
-  if (import.meta.server) return 5
-  try {
-    const stored = localStorage.getItem(REST_DURATION_KEY)
-    const value = stored ? parseInt(stored, 10) : 5
-    return isNaN(value) || value < 1 || value > 99 ? 5 : value
-  } catch {
-    return 5
-  }
-}
-
-function loadBlurMode(): boolean {
-  if (import.meta.server) return true
-  try {
-    const stored = localStorage.getItem(BLUR_MODE_KEY)
-    return stored !== null ? stored === 'true' : true
-  } catch {
-    return true
-  }
-}
-
-const focusDuration = ref(loadFocusDuration())
-const restDuration = ref(loadRestDuration())
-const blurMode = ref(loadBlurMode())
+// Local form state - initialized from encrypted settings
+const focusDuration = ref(25)
+const restDuration = ref(5)
+const blurMode = ref(true)
 
 const focusError = ref('')
 const restError = ref('')
+
+// Load current settings when they become available
+watch(isSettingsLoaded, (loaded) => {
+  if (loaded) {
+    focusDuration.value = settings.focusDuration
+    restDuration.value = settings.restDuration
+    blurMode.value = settings.blurMode
+  }
+}, { immediate: true })
 
 function validateFocusDuration() {
   const value = focusDuration.value
@@ -72,31 +47,14 @@ function saveSettings() {
     return
   }
 
-  if (import.meta.server) return
+  // Update all settings at once
+  updateSettings({
+    focusDuration: focusDuration.value,
+    restDuration: restDuration.value,
+    blurMode: blurMode.value
+  })
 
-  try {
-    localStorage.setItem(FOCUS_DURATION_KEY, focusDuration.value.toString())
-    localStorage.setItem(REST_DURATION_KEY, restDuration.value.toString())
-    localStorage.setItem(BLUR_MODE_KEY, blurMode.value.toString())
-
-    // Trigger storage event so FocusTimer can pick up changes
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: FOCUS_DURATION_KEY,
-      newValue: focusDuration.value.toString()
-    }))
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: REST_DURATION_KEY,
-      newValue: restDuration.value.toString()
-    }))
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: BLUR_MODE_KEY,
-      newValue: blurMode.value.toString()
-    }))
-
-    emit('close')
-  } catch (error) {
-    console.error('Failed to save settings:', error)
-  }
+  emit('close')
 }
 
 function handleClose(open?: boolean) {

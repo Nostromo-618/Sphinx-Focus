@@ -16,6 +16,8 @@ export const REST_DURATION_SECONDS = 5 * 60
 export const STORAGE_KEYS = {
   security: 'sphinx-focus-security',
   tasks: 'sphinx-focus-tasks-encrypted',
+  settings: 'sphinx-focus-settings-encrypted',
+  // Legacy keys (for migration tests only - no longer used)
   timer: 'sphinx-focus-timer',
   focusDuration: 'sphinx-focus-focus-duration',
   restDuration: 'sphinx-focus-rest-duration',

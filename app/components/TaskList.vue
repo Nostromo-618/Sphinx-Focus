@@ -1,7 +1,5 @@
 <script setup lang="ts">
 const STORAGE_KEY = 'sphinx-focus-tasks-encrypted'
-const FADE_DURATION_KEY = 'sphinx-focus-task-fade-duration'
-const TASK_POSITION_KEY = 'sphinx-focus-task-position'
 
 interface Task {
   id: string
@@ -13,63 +11,18 @@ interface Task {
 
 const { encrypt, decrypt } = useEncryption()
 const { isUnlocked, hasSessionKey, getSessionKey } = useSecuritySettings()
+const { settings } = useEncryptedSettings()
 
 const tasks = ref<Task[]>([])
 const newTaskText = ref('')
 const draggedTaskId = ref<string | null>(null)
 const dragOverTaskId = ref<string | null>(null)
 const isLoading = ref(true)
-const fadeDuration = ref(55)
-const taskPosition = ref<'bottom' | 'top'>('bottom')
 const taskOpacities = ref<Record<string, number>>({})
 
-// Load fade duration from localStorage
-function loadFadeDuration(): number {
-  if (import.meta.server) return 55
-  try {
-    const stored = localStorage.getItem(FADE_DURATION_KEY)
-    const value = stored ? parseInt(stored, 10) : 55
-    return isNaN(value) || value < 1 || value > 180 ? 55 : value
-  } catch {
-    return 55
-  }
-}
-
-// Load task position from localStorage
-function loadTaskPosition(): 'bottom' | 'top' {
-  if (import.meta.server) return 'bottom'
-  try {
-    const stored = localStorage.getItem(TASK_POSITION_KEY)
-    return stored === 'top' ? 'top' : 'bottom'
-  } catch {
-    return 'bottom'
-  }
-}
-
-// Watch for settings changes
-function watchSettings() {
-  if (import.meta.server) return
-  const handleStorageChange = (e: StorageEvent) => {
-    if (e.key === FADE_DURATION_KEY && e.newValue) {
-      const value = parseInt(e.newValue, 10)
-      if (!isNaN(value) && value >= 1 && value <= 180) {
-        fadeDuration.value = value
-      }
-    }
-    if (e.key === TASK_POSITION_KEY && e.newValue) {
-      taskPosition.value = e.newValue === 'top' ? 'top' : 'bottom'
-    }
-  }
-  window.addEventListener('storage', handleStorageChange)
-  onUnmounted(() => {
-    window.removeEventListener('storage', handleStorageChange)
-  })
-}
-
-// Initialize settings
-fadeDuration.value = loadFadeDuration()
-taskPosition.value = loadTaskPosition()
-watchSettings()
+// Get settings from encrypted settings (reactive)
+const fadeDuration = computed(() => settings.taskFadeDuration)
+const taskPosition = computed(() => settings.taskPosition)
 
 // Load tasks when unlocked
 watch(isUnlocked, async (unlocked) => {
@@ -194,8 +147,8 @@ function toggleTask(id: string) {
       taskOpacities.value[task.id] = 1
     } else {
       // Clear completion timestamp and opacity when uncompleting
-      delete task.completedAt
-      delete taskOpacities.value[task.id]
+      task.completedAt = undefined
+      taskOpacities.value[task.id] = undefined as unknown as number
     }
     sortTasks()
   }
@@ -252,14 +205,14 @@ function handleDrop(event: DragEvent, targetTaskId: string) {
 
     if (oldOrder < newOrder) {
       // Dragging DOWN: shift intermediate tasks up
-      tasks.value.forEach(t => {
+      tasks.value.forEach((t) => {
         if (t.order > oldOrder && t.order <= newOrder) {
           t.order--
         }
       })
     } else {
       // Dragging UP: shift intermediate tasks down
-      tasks.value.forEach(t => {
+      tasks.value.forEach((t) => {
         if (t.order >= newOrder && t.order < oldOrder) {
           t.order++
         }
