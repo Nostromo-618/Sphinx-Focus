@@ -426,3 +426,27 @@ export async function setColorMode(page: Page, mode: 'light' | 'dark' | 'system'
   // Wait for theme transition
   await page.waitForTimeout(300)
 }
+
+// ============================================================================
+// Theme Color Helpers
+// ============================================================================
+
+/**
+ * Set theme color (primary or neutral)
+ * @param page - Playwright page object
+ * @param type - 'primary' or 'neutral'
+ * @param color - Color name (e.g., 'blue', 'slate')
+ */
+export async function setThemeColor(page: Page, type: 'primary' | 'neutral', color: string) {
+  const themeButton = page.getByRole('button', { name: /Customize theme colors/i })
+  await themeButton.click()
+  await page.waitForTimeout(300)
+
+  const colorLabel = color.charAt(0).toUpperCase() + color.slice(1)
+  const colorButton = page.getByRole('button', { name: new RegExp(`Select ${colorLabel} as ${type} color`, 'i') })
+  await colorButton.click()
+  await page.waitForTimeout(300)
+
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(300)
+}

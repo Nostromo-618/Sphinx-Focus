@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { animate, createTimeline } from 'animejs'
+import type { PrimaryColor } from '~/composables/useThemeSettings'
 
 defineProps<{
   formattedTime: string
@@ -12,9 +13,102 @@ const emit = defineEmits<{
 }>()
 
 const colorMode = useColorMode()
+const { primaryColor } = useThemeSettings()
 const overlayRef = ref<HTMLElement | null>(null)
 const gradientRef = ref<SVGElement | null>(null)
 const circleRef = ref<SVGElement | null>(null)
+
+// Color palettes for each primary color (dark shades for backgrounds, bright for accents)
+const colorPalettes: Record<PrimaryColor, { dark: string[]; light: string[]; accent: string[] }> = {
+  red: {
+    dark: ['rgb(127, 29, 29)', 'rgb(69, 10, 10)', 'rgb(153, 27, 27)'],
+    light: ['rgb(254, 226, 226)', 'rgb(254, 202, 202)', 'rgb(252, 165, 165)'],
+    accent: ['rgb(248, 113, 113)', 'rgb(239, 68, 68)', 'rgb(127, 29, 29)']
+  },
+  orange: {
+    dark: ['rgb(124, 45, 18)', 'rgb(67, 20, 7)', 'rgb(154, 52, 18)'],
+    light: ['rgb(255, 237, 213)', 'rgb(254, 215, 170)', 'rgb(253, 186, 116)'],
+    accent: ['rgb(251, 146, 60)', 'rgb(249, 115, 22)', 'rgb(124, 45, 18)']
+  },
+  amber: {
+    dark: ['rgb(120, 53, 15)', 'rgb(69, 26, 3)', 'rgb(146, 64, 14)'],
+    light: ['rgb(254, 243, 199)', 'rgb(253, 230, 138)', 'rgb(252, 211, 77)'],
+    accent: ['rgb(251, 191, 36)', 'rgb(245, 158, 11)', 'rgb(120, 53, 15)']
+  },
+  yellow: {
+    dark: ['rgb(113, 63, 18)', 'rgb(66, 32, 6)', 'rgb(133, 77, 14)'],
+    light: ['rgb(254, 249, 195)', 'rgb(254, 240, 138)', 'rgb(253, 224, 71)'],
+    accent: ['rgb(250, 204, 21)', 'rgb(234, 179, 8)', 'rgb(113, 63, 18)']
+  },
+  lime: {
+    dark: ['rgb(54, 83, 20)', 'rgb(26, 46, 5)', 'rgb(63, 98, 18)'],
+    light: ['rgb(236, 252, 203)', 'rgb(217, 249, 157)', 'rgb(190, 242, 100)'],
+    accent: ['rgb(163, 230, 53)', 'rgb(132, 204, 22)', 'rgb(54, 83, 20)']
+  },
+  green: {
+    dark: ['rgb(10, 83, 49)', 'rgb(5, 46, 22)', 'rgb(22, 101, 52)'],
+    light: ['rgb(217, 251, 232)', 'rgb(187, 247, 208)', 'rgb(134, 239, 172)'],
+    accent: ['rgb(0, 220, 130)', 'rgb(0, 161, 85)', 'rgb(5, 46, 22)']
+  },
+  emerald: {
+    dark: ['rgb(6, 78, 59)', 'rgb(2, 44, 34)', 'rgb(4, 120, 87)'],
+    light: ['rgb(209, 250, 229)', 'rgb(167, 243, 208)', 'rgb(110, 231, 183)'],
+    accent: ['rgb(52, 211, 153)', 'rgb(16, 185, 129)', 'rgb(6, 78, 59)']
+  },
+  teal: {
+    dark: ['rgb(17, 94, 89)', 'rgb(4, 47, 46)', 'rgb(15, 118, 110)'],
+    light: ['rgb(204, 251, 241)', 'rgb(153, 246, 228)', 'rgb(94, 234, 212)'],
+    accent: ['rgb(45, 212, 191)', 'rgb(20, 184, 166)', 'rgb(17, 94, 89)']
+  },
+  cyan: {
+    dark: ['rgb(22, 78, 99)', 'rgb(8, 51, 68)', 'rgb(14, 116, 144)'],
+    light: ['rgb(207, 250, 254)', 'rgb(165, 243, 252)', 'rgb(103, 232, 249)'],
+    accent: ['rgb(34, 211, 238)', 'rgb(6, 182, 212)', 'rgb(22, 78, 99)']
+  },
+  sky: {
+    dark: ['rgb(12, 74, 110)', 'rgb(8, 47, 73)', 'rgb(3, 105, 161)'],
+    light: ['rgb(224, 242, 254)', 'rgb(186, 230, 253)', 'rgb(125, 211, 252)'],
+    accent: ['rgb(56, 189, 248)', 'rgb(14, 165, 233)', 'rgb(12, 74, 110)']
+  },
+  blue: {
+    dark: ['rgb(30, 64, 175)', 'rgb(23, 37, 84)', 'rgb(29, 78, 216)'],
+    light: ['rgb(219, 234, 254)', 'rgb(191, 219, 254)', 'rgb(147, 197, 253)'],
+    accent: ['rgb(96, 165, 250)', 'rgb(59, 130, 246)', 'rgb(30, 64, 175)']
+  },
+  indigo: {
+    dark: ['rgb(55, 48, 163)', 'rgb(30, 27, 75)', 'rgb(67, 56, 202)'],
+    light: ['rgb(224, 231, 255)', 'rgb(199, 210, 254)', 'rgb(165, 180, 252)'],
+    accent: ['rgb(129, 140, 248)', 'rgb(99, 102, 241)', 'rgb(55, 48, 163)']
+  },
+  violet: {
+    dark: ['rgb(76, 29, 149)', 'rgb(46, 16, 101)', 'rgb(91, 33, 182)'],
+    light: ['rgb(237, 233, 254)', 'rgb(221, 214, 254)', 'rgb(196, 181, 253)'],
+    accent: ['rgb(167, 139, 250)', 'rgb(139, 92, 246)', 'rgb(76, 29, 149)']
+  },
+  purple: {
+    dark: ['rgb(88, 28, 135)', 'rgb(59, 7, 100)', 'rgb(107, 33, 168)'],
+    light: ['rgb(243, 232, 255)', 'rgb(233, 213, 255)', 'rgb(216, 180, 254)'],
+    accent: ['rgb(192, 132, 252)', 'rgb(168, 85, 247)', 'rgb(88, 28, 135)']
+  },
+  fuchsia: {
+    dark: ['rgb(112, 26, 117)', 'rgb(74, 4, 78)', 'rgb(134, 25, 143)'],
+    light: ['rgb(250, 232, 255)', 'rgb(245, 208, 254)', 'rgb(240, 171, 252)'],
+    accent: ['rgb(232, 121, 249)', 'rgb(217, 70, 239)', 'rgb(112, 26, 117)']
+  },
+  pink: {
+    dark: ['rgb(131, 24, 67)', 'rgb(80, 7, 36)', 'rgb(157, 23, 77)'],
+    light: ['rgb(252, 231, 243)', 'rgb(251, 207, 232)', 'rgb(249, 168, 212)'],
+    accent: ['rgb(244, 114, 182)', 'rgb(236, 72, 153)', 'rgb(131, 24, 67)']
+  },
+  rose: {
+    dark: ['rgb(136, 19, 55)', 'rgb(76, 5, 25)', 'rgb(159, 18, 57)'],
+    light: ['rgb(255, 228, 230)', 'rgb(254, 205, 211)', 'rgb(253, 164, 175)'],
+    accent: ['rgb(251, 113, 133)', 'rgb(244, 63, 94)', 'rgb(136, 19, 55)']
+  }
+}
+
+// Get current color palette based on primary color
+const currentPalette = computed(() => colorPalettes[primaryColor.value])
 
 // Wave animation timeline
 let waveTimeline: ReturnType<typeof createTimeline> | null = null
@@ -39,6 +133,18 @@ onUnmounted(() => {
     circleTimeline.pause()
     circleTimeline = null
   }
+})
+
+// Watch for primary color changes and restart animations
+watch(primaryColor, () => {
+  // Restart circle animation with new colors
+  if (circleTimeline) {
+    circleTimeline.pause()
+    circleTimeline = null
+  }
+  nextTick(() => {
+    startCircleAnimation()
+  })
 })
 
 function startWaveAnimation() {
@@ -83,7 +189,9 @@ function startWaveAnimation() {
 function startCircleAnimation() {
   if (!circleRef.value) return
 
-  // Animate the glowing circle gradient - neon green to deep green
+  const palette = currentPalette.value
+
+  // Animate the glowing circle gradient
   circleTimeline = createTimeline({
     loop: true,
     defaults: {
@@ -103,13 +211,13 @@ function startCircleAnimation() {
   // Animate the gradient rotation effect via stop positions
   circleTimeline
     .add('.circle-stop-1', {
-      stopColor: ['rgb(0, 220, 130)', 'rgb(0, 161, 85)', 'rgb(0, 220, 130)']
+      stopColor: [palette.accent[0], palette.accent[1], palette.accent[0]]
     }, 0)
     .add('.circle-stop-2', {
-      stopColor: ['rgb(0, 161, 85)', 'rgb(5, 46, 22)', 'rgb(0, 161, 85)']
+      stopColor: [palette.accent[1], palette.accent[2], palette.accent[1]]
     }, 0)
     .add('.circle-stop-3', {
-      stopColor: ['rgb(5, 46, 22)', 'rgb(0, 220, 130)', 'rgb(5, 46, 22)']
+      stopColor: [palette.accent[2], palette.accent[0], palette.accent[2]]
     }, 0)
 }
 </script>
@@ -142,7 +250,7 @@ function startCircleAnimation() {
           <stop
             class="wave-stop wave-stop-2"
             offset="30%"
-            stop-color="rgb(5, 46, 22)"
+            :stop-color="currentPalette.dark[1]"
           />
           <stop
             class="wave-stop wave-stop-3"
@@ -152,7 +260,7 @@ function startCircleAnimation() {
           <stop
             class="wave-stop wave-stop-4"
             offset="100%"
-            stop-color="rgb(10, 83, 49)"
+            :stop-color="currentPalette.dark[0]"
           />
         </linearGradient>
 
@@ -172,7 +280,7 @@ function startCircleAnimation() {
           <stop
             class="wave-stop wave-stop-2"
             offset="30%"
-            stop-color="rgb(217, 251, 232)"
+            :stop-color="currentPalette.light[0]"
           />
           <stop
             class="wave-stop wave-stop-3"
@@ -182,7 +290,7 @@ function startCircleAnimation() {
           <stop
             class="wave-stop wave-stop-4"
             offset="100%"
-            stop-color="rgb(179, 245, 209)"
+            :stop-color="currentPalette.light[2]"
           />
         </linearGradient>
 
@@ -195,7 +303,7 @@ function startCircleAnimation() {
         >
           <stop
             offset="0%"
-            stop-color="rgb(5, 46, 22)"
+            :stop-color="currentPalette.dark[1]"
             stop-opacity="0.4"
           />
           <stop
@@ -213,7 +321,7 @@ function startCircleAnimation() {
         >
           <stop
             offset="0%"
-            stop-color="rgb(179, 245, 209)"
+            :stop-color="currentPalette.light[2]"
             stop-opacity="0.5"
           />
           <stop
@@ -287,17 +395,17 @@ function startCircleAnimation() {
               <stop
                 class="circle-stop-1"
                 offset="0%"
-                stop-color="rgb(0, 220, 130)"
+                :stop-color="currentPalette.accent[0]"
               />
               <stop
                 class="circle-stop-2"
                 offset="50%"
-                stop-color="rgb(0, 161, 85)"
+                :stop-color="currentPalette.accent[1]"
               />
               <stop
                 class="circle-stop-3"
                 offset="100%"
-                stop-color="rgb(5, 46, 22)"
+                :stop-color="currentPalette.accent[2]"
               />
             </linearGradient>
 
@@ -356,10 +464,7 @@ function startCircleAnimation() {
           </div>
 
           <!-- REST label - 33% larger and bold -->
-          <div
-            class="text-2xl md:text-3xl font-bold tracking-wider transition-colors"
-            :class="colorMode.value === 'dark' ? 'text-green-400' : 'text-green-600'"
-          >
+          <div class="text-2xl md:text-3xl font-bold tracking-wider transition-colors text-primary">
             REST
           </div>
         </div>

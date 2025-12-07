@@ -25,6 +25,9 @@ useSeoMeta({
 // Security state
 const { initialize, isInitialized: _isInitialized, isUnlocked, currentMode, isFirstRun, lock, clearAllData } = useSecuritySettings()
 
+// Theme state
+const { initialize: initializeTheme } = useThemeSettings()
+
 const showSetupModal = ref(false)
 const showPINModal = ref(false)
 const showClearConfirm = ref(false)
@@ -32,6 +35,9 @@ const appReady = ref(false)
 const isSetupModalDismissible = ref(false)
 
 onMounted(async () => {
+  // Initialize theme first (loads from localStorage)
+  initializeTheme()
+
   await initialize()
 
   if (isFirstRun()) {
@@ -171,6 +177,8 @@ function cancelClearData() {
         <div class="hidden sm:flex items-center gap-1.5">
           <VersionButton />
 
+          <ThemePickerModal />
+
           <ColorModeButton />
 
           <SecurityButton
@@ -193,6 +201,8 @@ function cancelClearData() {
       <template #body>
         <div class="flex flex-col gap-2">
           <VersionButton />
+
+          <ThemePickerModal />
 
           <ColorModeButton />
 
