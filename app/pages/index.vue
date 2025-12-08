@@ -213,7 +213,7 @@ function handleReset() {
         v-show="restStage !== 2"
         class="container mx-auto px-4 py-6"
       >
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative">
+        <div class="grid grid-cols-1 md:grid-cols-[1fr_1.618fr] gap-4 relative">
           <!-- Timer Card - stays unblurred in stage 1 -->
           <UCard
             class="relative z-[60] transition-all duration-1000"

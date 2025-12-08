@@ -336,7 +336,7 @@ defineExpose({
         :key="task.id"
         :data-testid="`task-item-${task.id}`"
         :draggable="true"
-        class="flex items-center gap-3 p-3 rounded-lg border border-border bg-default hover:bg-elevated transition-all cursor-move"
+        class="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-border bg-default hover:bg-elevated transition-all cursor-move"
         :class="{
           'opacity-50': draggedTaskId === task.id,
           'ring-2 ring-primary': dragOverTaskId === task.id && draggedTaskId !== task.id
