@@ -35,11 +35,14 @@ const showTaskSettingsModal = ref(false)
 
 // Rest mode stage management
 // Stage 0: Normal mode (no rest)
-// Stage 1: Initial rest - blur TaskList only, keep FocusTimer visible
-// Stage 2: Immersive centered rest mode with animated gradient
-const restStage = ref<0 | 1 | 2>(0)
+// Stage 2: Immersive centered rest mode with RestModeOverlay
+const restStage = ref<0 | 2>(0)
 const stageTransitionTimeout = ref<ReturnType<typeof setTimeout> | null>(null)
-const isExiting = ref(false) // Track if we're in the exit phase
+
+// Rest transition states for 3-step animation (3 seconds total, 1000ms per step)
+// Entering: 'blur' -> 'dark' -> 'overlay'
+// Exiting: 'exit-dark' -> 'exit-hide' -> 'exit-unblur' -> 'none'
+const restTransition = ref<'none' | 'blur' | 'dark' | 'overlay' | 'exit-dark' | 'exit-hide' | 'exit-unblur'>('none')
 
 const timerTitle = computed(() => {
   const timer = focusTimerRef.value
@@ -118,7 +121,7 @@ const taskListBlurred = computed(() => {
 const showQuickBlurButton = computed(() => {
   const timer = focusTimerRef.value
   if (!timer) return false
-  return timer.mode === 'focus' && timer.state === 'running' && blurModeEnabled.value && taskListBlurred.value
+  return timer.mode === 'focus' && timer.state === 'running' && blurModeEnabled.value
 })
 
 // Reset quickBlur to default when timer is reset (goes back to idle)
@@ -135,56 +138,56 @@ const isBlurred = computed(() => {
   const timer = focusTimerRef.value
   if (!timer) return false
   // Focus mode: show overlay when task list is blurred
-  const isFocusBlur = timer.mode === 'focus' && timer.state === 'running' && taskListBlurred.value
-  // Rest mode stage 1: only blur if blur mode is enabled
-  const isRestStage1Blur = timer.mode === 'rest' && timer.state === 'running' && restStage.value === 1 && blurModeEnabled.value
-  return isFocusBlur || isRestStage1Blur
+  return timer.mode === 'focus' && timer.state === 'running' && taskListBlurred.value
 })
 
-// Watch for rest mode changes to manage stages
+// Watch for rest mode changes to manage 3-step transitions (3 seconds total)
 watch(isRestMode, (isRest, wasRest) => {
-  // Clear any pending transition
+  // Clear any pending transitions
   if (stageTransitionTimeout.value) {
     clearTimeout(stageTransitionTimeout.value)
     stageTransitionTimeout.value = null
   }
 
   if (isRest && !wasRest) {
-    // Entering rest mode - start at stage 1
-    isExiting.value = false
-    restStage.value = 1
+    // Entering rest mode - 3 steps over 3 seconds
+    // Step 1: Blur whole screen immediately
+    restTransition.value = 'blur'
 
-    // After 3 seconds, transition to stage 2 (immersive)
+    // Step 2: After 1000ms, add darkness
+    setTimeout(() => {
+      if (isRestMode.value) {
+        restTransition.value = 'dark'
+      }
+    }, 1000)
+
+    // Step 3: After 2000ms, show overlay and fade darkness
     stageTransitionTimeout.value = setTimeout(() => {
       if (isRestMode.value) {
         restStage.value = 2
+        restTransition.value = 'overlay'
       }
-    }, 3000)
+    }, 2000)
   } else if (!isRest && wasRest) {
-    // Exiting rest mode - gradual 3-second phase out
-    isExiting.value = true
+    // Exiting rest mode - 3 steps over 2 seconds
+    // Step 1: Add darkness immediately
+    restTransition.value = 'exit-dark'
 
-    if (restStage.value === 2) {
-      // Phase 1: Fade away centered timer, return to stage 1 (1s)
-      restStage.value = 1
+    // Step 2: After 667ms, hide overlay
+    setTimeout(() => {
+      restStage.value = 0
+      restTransition.value = 'exit-hide'
+    }, 667)
 
-      // Phase 2: After 1s, start unblurring (2s more)
-      stageTransitionTimeout.value = setTimeout(() => {
-        restStage.value = 0
-        // Phase 3: After another 2s, fully exit
-        setTimeout(() => {
-          isExiting.value = false
-        }, 2000)
-      }, 1000)
-    } else {
-      // Already at stage 1, just fade out over 2s
-      stageTransitionTimeout.value = setTimeout(() => {
-        restStage.value = 0
-        setTimeout(() => {
-          isExiting.value = false
-        }, 2000)
-      }, 1000)
-    }
+    // Step 3: After 1333ms, unblur
+    setTimeout(() => {
+      restTransition.value = 'exit-unblur'
+    }, 1333)
+
+    // Step 4: After 2000ms, reset to none
+    stageTransitionTimeout.value = setTimeout(() => {
+      restTransition.value = 'none'
+    }, 2000)
   }
 }, { immediate: true })
 
@@ -195,13 +198,9 @@ onUnmounted(() => {
   }
 })
 
-// Timer control handlers for RestModeOverlay
+// Timer control handler for RestModeOverlay
 function handleSkip() {
   focusTimerRef.value?.skipSession()
-}
-
-function handleReset() {
-  focusTimerRef.value?.resetTimer()
 }
 </script>
 
@@ -211,10 +210,14 @@ function handleReset() {
     <Transition name="rest-content">
       <div
         v-show="restStage !== 2"
-        class="container mx-auto px-4 py-6"
+        class="container mx-auto px-4 py-6 transition-all duration-1000"
+        :class="{
+          'blur-3xl': restTransition === 'blur' || restTransition === 'dark',
+          'blur-3xl opacity-0': restTransition === 'exit-hide'
+        }"
       >
         <div class="grid grid-cols-1 md:grid-cols-[1fr_1.618fr] gap-4 relative">
-          <!-- Timer Card - stays unblurred in stage 1 -->
+          <!-- Timer Card -->
           <UCard
             class="relative z-[60] transition-all duration-1000"
           >
@@ -255,12 +258,11 @@ function handleReset() {
             </div>
           </UCard>
 
-          <!-- Task List Card - blurred via quick toggle or during rest stage 1 (if blur mode enabled) -->
+          <!-- Task List Card - blurred via quick toggle during focus mode -->
           <UCard
-            class="relative z-10 transition-all duration-1000"
+            class="relative z-10 transition-all duration-500"
             :class="{
-              'blur-md opacity-50': taskListBlurred && restStage === 0,
-              'blur-xl opacity-20': restStage === 1 && blurModeEnabled
+              'blur-md opacity-50': taskListBlurred && restTransition === 'none'
             }"
           >
             <template #header>
@@ -288,20 +290,24 @@ function handleReset() {
     <!-- Blur overlay backdrop - only for focus mode blur -->
     <Transition name="fade">
       <div
-        v-if="isBlurred && restStage === 0"
+        v-if="isBlurred && restTransition === 'none'"
         class="fixed inset-0 bg-background/60 backdrop-blur-sm z-50 pointer-events-none transition-all duration-500"
       />
     </Transition>
 
-    <!-- Rest mode stage 1 overlay - subtle background dim, timer stays visible (only if blur mode enabled) -->
-    <Transition name="rest-stage1">
+    <!-- Rest mode: Full screen blur overlay (entering steps 1-2, exiting step 3) -->
+    <Transition name="fade">
       <div
-        v-if="restStage === 1 && blurModeEnabled"
-        class="fixed inset-0 bg-background/40 z-40 pointer-events-none transition-all"
-        :class="{
-          'duration-1000': !isExiting,
-          'duration-2000': isExiting
-        }"
+        v-if="restTransition === 'blur' || restTransition === 'dark' || restTransition === 'exit-unblur'"
+        class="fixed inset-0 z-50 backdrop-blur-3xl pointer-events-none transition-all duration-1000"
+      />
+    </Transition>
+
+    <!-- Rest mode: Darkness overlay (entering step 2, exiting step 1) -->
+    <Transition name="fade">
+      <div
+        v-if="restTransition === 'dark' || restTransition === 'exit-dark'"
+        class="fixed inset-0 z-[65] bg-black/80 pointer-events-none transition-opacity duration-1000"
       />
     </Transition>
 
@@ -312,7 +318,6 @@ function handleReset() {
         :formatted-time="focusTimerRef.formattedTime"
         :state="focusTimerRef.state"
         @skip="handleSkip"
-        @reset="handleReset"
       />
     </Transition>
 

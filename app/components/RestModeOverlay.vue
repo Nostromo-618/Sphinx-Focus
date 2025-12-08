@@ -9,7 +9,6 @@ defineProps<{
 
 const emit = defineEmits<{
   skip: []
-  reset: []
 }>()
 
 const colorMode = useColorMode()
@@ -470,7 +469,7 @@ function startCircleAnimation() {
         </div>
       </div>
 
-      <!-- Controls - Only Skip and Reset (no Pause) -->
+      <!-- Controls - Skip only -->
       <div class="flex gap-3">
         <UButton
           label="Skip"
@@ -479,14 +478,6 @@ function startCircleAnimation() {
           variant="outline"
           size="lg"
           @click="emit('skip')"
-        />
-        <UButton
-          label="Reset"
-          icon="i-lucide-rotate-ccw"
-          color="neutral"
-          variant="outline"
-          size="lg"
-          @click="emit('reset')"
         />
       </div>
     </div>

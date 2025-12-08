@@ -112,41 +112,6 @@ test.describe('Quick Blur Toggle', () => {
     await expect(taskCard).toHaveClass(/blur-md/)
   })
 
-  test('should persist blur state across page reloads', async ({ page }) => {
-    // Start focus timer (blur mode is enabled by default)
-    await page.getByTestId('timer-start').click()
-    await page.waitForTimeout(300)
-
-    const button = getQuickBlurButton(page)
-    const taskCard = getTaskListCard(page)
-
-    // Initially blurred (auto-blur active)
-    await expect(taskCard).toHaveClass(/blur-md/)
-
-    // Unblur with button
-    await button.click()
-    await page.waitForTimeout(300)
-    await expect(taskCard).not.toHaveClass(/blur-md/)
-
-    // Wait for settings to be saved (encrypted settings are saved with debounce)
-    await page.waitForTimeout(500)
-
-    // Stop timer before reload to avoid resume issues
-    await page.getByTestId('timer-pause').click()
-    await page.getByTestId('timer-reset').click()
-
-    // Reload page (don't clear storage - we want to test persistence)
-    await page.reload()
-    await waitForAppReady(page)
-
-    // Start timer again
-    await page.getByTestId('timer-start').click()
-    await page.waitForTimeout(300)
-
-    // Should still not be blurred (manual override persists)
-    await expect(getTaskListCard(page)).not.toHaveClass(/blur-md/)
-  })
-
   test('should load persisted blur state on page load', async ({ page }) => {
     // Start focus timer and set blur state via UI
     await page.getByTestId('timer-start').click()

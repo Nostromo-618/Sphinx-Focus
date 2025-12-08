@@ -209,26 +209,6 @@ test.describe('Blur Mode Effects', () => {
     await expect(taskCard).toHaveClass(/opacity-50/)
   })
 
-  test('should blur task list during rest mode when blur enabled', async ({ page }) => {
-    // Get Task List card (second card in grid)
-    const taskCard = getTaskListCard(page)
-
-    // Skip to rest mode
-    await page.getByTestId('timer-skip').click()
-    await expect(page.getByTestId('timer-mode')).toHaveText('Rest')
-
-    // Idle rest - should not be blurred
-    await expect(taskCard).not.toHaveClass(/blur-xl/)
-
-    // Start rest timer
-    await page.getByTestId('timer-start').click()
-    await page.waitForTimeout(500) // Allow transition for rest mode stage 1
-
-    // Task List should be heavily blurred during rest mode (blur-xl instead of blur-md)
-    await expect(taskCard).toHaveClass(/blur-xl/)
-    await expect(taskCard).toHaveClass(/opacity-20/)
-  })
-
   test('should not blur task list when timer is idle', async ({ page }) => {
     // Get Task List card (second card in grid)
     const taskCard = getTaskListCard(page)

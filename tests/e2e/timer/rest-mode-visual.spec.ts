@@ -20,8 +20,8 @@ test.describe('Rest Mode Visual Enhancements', () => {
     return page.locator('.grid > div').nth(0)
   }
 
-  test.describe('Stage 1 - Initial Rest Mode', () => {
-    test('should keep timer card unblurred in stage 1', async ({ page }) => {
+  test.describe('Entering Rest Mode Transition', () => {
+    test('should blur entire screen when entering rest mode', async ({ page }) => {
       // Skip to rest mode
       await page.getByTestId('timer-skip').click()
       await expect(page.getByTestId('timer-mode')).toHaveText('Rest')
@@ -29,29 +29,12 @@ test.describe('Rest Mode Visual Enhancements', () => {
       // Start rest timer
       await page.getByTestId('timer-start').click()
 
-      // Wait for stage 1 to be active (brief moment)
+      // Wait for blur transition to apply (blur occurs in first step)
       await page.waitForTimeout(500)
 
-      // Timer card should NOT be blurred
-      const timerCard = getTimerCard(page)
-      await expect(timerCard).not.toHaveClass(/blur/)
-    })
-
-    test('should heavily blur task list in stage 1', async ({ page }) => {
-      // Skip to rest mode
-      await page.getByTestId('timer-skip').click()
-      await expect(page.getByTestId('timer-mode')).toHaveText('Rest')
-
-      // Start rest timer
-      await page.getByTestId('timer-start').click()
-
-      // Wait for stage 1 to be active
-      await page.waitForTimeout(500)
-
-      // Task list card should be heavily blurred
-      const taskCard = getTaskListCard(page)
-      await expect(taskCard).toHaveClass(/blur-xl/)
-      await expect(taskCard).toHaveClass(/opacity-20/)
+      // Full screen blur should be applied during transition
+      const blurOverlay = page.locator('.backdrop-blur-3xl')
+      await expect(blurOverlay).toBeVisible()
     })
   })
 
@@ -67,8 +50,10 @@ test.describe('Rest Mode Visual Enhancements', () => {
       // Wait for stage 2 transition (3 seconds + buffer)
       await page.waitForTimeout(3500)
 
-      // Immersive overlay should be visible with REST label
-      await expect(page.locator('text=REST').first()).toBeVisible()
+      // Immersive overlay should be visible with REST label (uppercase in overlay)
+      const overlay = page.locator('.fixed.inset-0.z-\\[70\\]')
+      await expect(overlay).toBeVisible()
+      await expect(overlay.locator('text=REST')).toBeVisible()
     })
 
     test('should display REST label in uppercase', async ({ page }) => {
@@ -97,7 +82,7 @@ test.describe('Rest Mode Visual Enhancements', () => {
       await expect(glowCircle).toBeVisible()
     })
 
-    test('should only show Skip and Reset buttons (no Pause)', async ({ page }) => {
+    test('should only show Skip button (no Pause or Reset)', async ({ page }) => {
       // Skip to rest mode and start timer
       await page.getByTestId('timer-skip').click()
       await page.getByTestId('timer-start').click()
@@ -105,12 +90,12 @@ test.describe('Rest Mode Visual Enhancements', () => {
       // Wait for stage 2
       await page.waitForTimeout(3500)
 
-      // In the overlay, should have Skip and Reset buttons
+      // In the overlay, should only have Skip button
       const overlay = page.locator('.fixed.inset-0.z-\\[70\\]')
       await expect(overlay.getByRole('button', { name: 'Skip' })).toBeVisible()
-      await expect(overlay.getByRole('button', { name: 'Reset' })).toBeVisible()
 
-      // Pause button should NOT be in the overlay
+      // Reset and Pause buttons should NOT be in the overlay
+      await expect(overlay.getByRole('button', { name: 'Reset' })).not.toBeVisible()
       await expect(overlay.getByRole('button', { name: 'Pause' })).not.toBeVisible()
     })
 
@@ -132,26 +117,6 @@ test.describe('Rest Mode Visual Enhancements', () => {
       // Should be in focus mode
       await expect(page.getByTestId('timer-mode')).toHaveText('Focus')
     })
-
-    test('should reset rest timer from overlay', async ({ page }) => {
-      // Skip to rest mode and start timer
-      await page.getByTestId('timer-skip').click()
-      await page.getByTestId('timer-start').click()
-
-      // Wait for stage 2
-      await page.waitForTimeout(3500)
-
-      // Click Reset in overlay
-      const overlay = page.locator('.fixed.inset-0.z-\\[70\\]')
-      await overlay.getByRole('button', { name: 'Reset' }).click()
-
-      // Should exit immersive mode and reset timer
-      await page.waitForTimeout(3500) // Wait for exit transition
-
-      // Timer should be reset to rest duration and idle
-      await expect(page.getByTestId('timer-mode')).toHaveText('Rest')
-      await expect(page.getByTestId('timer-display')).toHaveText('05:00')
-    })
   })
 
   test.describe('Exit Transition', () => {
@@ -164,13 +129,13 @@ test.describe('Rest Mode Visual Enhancements', () => {
       await page.waitForTimeout(3500)
 
       // Verify we're in stage 2
-      await expect(page.locator('text=REST').first()).toBeVisible()
+      const overlay = page.locator('.fixed.inset-0.z-\\[70\\]')
+      await expect(overlay).toBeVisible()
 
       // Skip to exit
-      const overlay = page.locator('.fixed.inset-0.z-\\[70\\]')
       await overlay.getByRole('button', { name: 'Skip' }).click()
 
-      // Wait for full exit transition (3 seconds)
+      // Wait for full exit transition (2 seconds)
       await page.waitForTimeout(3500)
 
       // Should be back to normal focus mode

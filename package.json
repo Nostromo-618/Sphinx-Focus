@@ -1,6 +1,6 @@
 {
   "name": "sphinx-focus",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.79",
-    "@iconify-json/simple-icons": "^1.2.61",
+    "@iconify-json/simple-icons": "^1.2.62",
     "@nuxt/icon": "^2.1.0",
     "@nuxt/ui": "^4.2.1",
     "animejs": "^4.2.2",
@@ -30,7 +30,7 @@
     "@playwright/test": "^1.57.0",
     "eslint": "^9.39.1",
     "typescript": "^5.9.3",
-    "vue-tsc": "^3.1.6"
+    "vue-tsc": "^3.1.7"
   },
   "packageManager": "pnpm@10.19.0"
 }

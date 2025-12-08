@@ -5,6 +5,21 @@ All notable changes to Sphinx Focus will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.1] - 2025-12-08
+
+### Changed
+- Timer and task list cards now use golden ratio proportions (1:1.618) for improved visual balance
+- Task rows are 15% thinner for a more compact layout
+- Rest mode transition redesigned with smooth 3-step animation flow (blur → dark → overlay)
+- Rest mode entry animation takes 3 seconds, exit animation takes 2 seconds
+- Quick blur toggle button now stays visible when clicked, with icon changing between eye/eye-off
+
+### Removed
+- Reset button removed from rest mode overlay (Skip button remains)
+
+### Fixed
+- Blur toggle button no longer disappears when toggling blur state
+
 ## [2.3.0] - 2025-12-07
 
 ### Added
