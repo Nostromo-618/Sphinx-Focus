@@ -2,9 +2,9 @@
 
 This directory contains automated E2E tests for the Sphinx Focus application using Playwright.
 
-> **Test Count:** 99 tests  
+> **Test Count:** 190 tests  
 > **Coverage:** 100% of defined features  
-> **Last Updated:** 2025-11-29
+> **Last Updated:** 2025-12-08
 
 ## Directory Structure
 
@@ -12,19 +12,27 @@ This directory contains automated E2E tests for the Sphinx Focus application usi
 tests/
 ├── e2e/                              # End-to-end browser tests
 │   ├── security/                     # Security flow tests
+│   │   ├── auto-mode.spec.ts         # [P2 - Medium] Auto mode security
 │   │   ├── first-run-setup.spec.ts   # [P0 - Critical] First-time user setup
-│   │   ├── pin-unlock.spec.ts        # [P0 - Critical] PIN unlock & lock flows
-│   │   └── auto-mode.spec.ts         # [P2 - Medium] Auto mode security
+│   │   ├── mode-change.spec.ts       # [P1 - High] Security mode switching
+│   │   └── pin-unlock.spec.ts        # [P0 - Critical] PIN unlock & lock flows
 │   ├── timer/                        # Timer functionality tests
+│   │   ├── rest-mode-visual.spec.ts  # [P2 - Medium] Rest mode overlay & transitions
 │   │   ├── timer-controls.spec.ts    # [P1 - High] Start, pause, resume, reset, skip
 │   │   ├── timer-persistence.spec.ts # [P2 - Medium] State persistence across reloads
 │   │   └── timer-settings.spec.ts    # [P2 - Medium] Duration & blur mode settings
 │   ├── tasks/                        # Task management tests
 │   │   ├── task-crud.spec.ts         # [P1 - High] Create, read, update, delete
-│   │   └── task-drag-drop.spec.ts    # [P3 - Low] Drag & drop reordering
+│   │   ├── task-drag-drop.spec.ts    # [P3 - Low] Drag & drop reordering
+│   │   ├── task-fade-away.spec.ts    # [P2 - Medium] Completed task fading
+│   │   └── task-settings.spec.ts     # [P2 - Medium] Task position & fade settings
 │   └── ui/                           # UI/UX tests
+│       ├── about-modal.spec.ts       # [P3 - Low] About modal & tabs
 │       ├── color-mode.spec.ts        # [P3 - Low] Light/dark/system theme
-│       └── responsive.spec.ts        # [P3 - Low] Mobile & tablet layouts
+│       ├── modal-dismiss.spec.ts     # [P2 - Medium] Modal dismiss behaviors
+│       ├── quick-blur-toggle.spec.ts # [P2 - Medium] Quick blur toggle button
+│       ├── responsive.spec.ts        # [P3 - Low] Mobile & tablet layouts
+│       └── theme-picker.spec.ts      # [P3 - Low] Theme color customization
 ├── fixtures/                         # Test utilities and helpers
 │   └── test-utils.ts                 # Page objects, helpers, constants
 └── README.md                         # This file

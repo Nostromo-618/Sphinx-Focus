@@ -12,6 +12,24 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.3.1',
+    date: '2025-12-08',
+    changes: {
+      changed: [
+        'Golden ratio layout (1:1.618) for timer and task cards',
+        'Task rows 15% thinner for compact design',
+        'Rest mode transition redesigned with smooth 3-step animation',
+        'Quick blur toggle stays visible when toggling'
+      ],
+      removed: [
+        'Reset button from rest mode overlay'
+      ],
+      fixed: [
+        'Blur toggle button no longer disappears when clicked'
+      ]
+    }
+  },
+  {
     version: '2.3.0',
     date: '2025-12-07',
     changes: {
@@ -185,7 +203,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.3.0',
+    getLatestVersion: () => changelogData[0]?.version || '2.3.1',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }

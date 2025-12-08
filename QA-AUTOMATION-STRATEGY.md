@@ -1,14 +1,14 @@
 # Sphinx Focus QA Automation Strategy
 
-> **Version:** 2.0.0  
-> **Last Updated:** 2025-11-29  
+> **Version:** 2.3.1  
+> **Last Updated:** 2025-12-08  
 > **Status:** Complete (100% Coverage Achieved)
 
 ## Overview
 
 This document defines the QA automation strategy for Sphinx Focus, a Pomodoro timer and encrypted task manager built with Nuxt 4, Vue 3, and Nuxt UI v4.
 
-**Current Status:** 99 E2E tests covering all defined features.
+**Current Status:** 190 E2E tests covering all defined features.
 
 ## Testing Tools
 
@@ -60,20 +60,28 @@ This document defines the QA automation strategy for Sphinx Focus, a Pomodoro ti
 ```
 tests/
 ├── e2e/                              # End-to-end browser tests
-│   ├── security/                     # Security flow tests
-│   │   ├── first-run-setup.spec.ts   # First-time user setup (9 tests)
-│   │   ├── pin-unlock.spec.ts        # PIN unlock & lock flows (13 tests)
-│   │   └── auto-mode.spec.ts         # Auto mode security (6 tests)
-│   ├── timer/                        # Timer functionality tests
-│   │   ├── timer-controls.spec.ts    # Start, pause, resume, reset (14 tests)
-│   │   ├── timer-persistence.spec.ts # State persistence (7 tests)
-│   │   └── timer-settings.spec.ts    # Duration & blur settings (10 tests)
-│   ├── tasks/                        # Task management tests
-│   │   ├── task-crud.spec.ts         # CRUD operations (19 tests)
-│   │   └── task-drag-drop.spec.ts    # Drag & drop reordering (6 tests)
-│   └── ui/                           # UI/UX tests
-│       ├── color-mode.spec.ts        # Light/dark/system theme (8 tests)
-│       └── responsive.spec.ts        # Mobile & tablet layouts (9 tests)
+│   ├── security/                     # Security flow tests (4 files, 36 tests)
+│   │   ├── auto-mode.spec.ts         # Auto mode security
+│   │   ├── first-run-setup.spec.ts   # First-time user setup
+│   │   ├── mode-change.spec.ts       # Security mode switching
+│   │   └── pin-unlock.spec.ts        # PIN unlock & lock flows
+│   ├── timer/                        # Timer functionality tests (4 files, 45 tests)
+│   │   ├── rest-mode-visual.spec.ts  # Rest mode overlay & transitions
+│   │   ├── timer-controls.spec.ts    # Start, pause, resume, reset
+│   │   ├── timer-persistence.spec.ts # State persistence
+│   │   └── timer-settings.spec.ts    # Duration & blur settings
+│   ├── tasks/                        # Task management tests (4 files, 56 tests)
+│   │   ├── task-crud.spec.ts         # CRUD operations
+│   │   ├── task-drag-drop.spec.ts    # Drag & drop reordering
+│   │   ├── task-fade-away.spec.ts    # Completed task fading
+│   │   └── task-settings.spec.ts     # Task position & fade settings
+│   └── ui/                           # UI/UX tests (6 files, 53 tests)
+│       ├── about-modal.spec.ts       # About modal & tabs
+│       ├── color-mode.spec.ts        # Light/dark/system theme
+│       ├── modal-dismiss.spec.ts     # Modal dismiss behaviors
+│       ├── quick-blur-toggle.spec.ts # Quick blur toggle button
+│       ├── responsive.spec.ts        # Mobile & tablet layouts
+│       └── theme-picker.spec.ts      # Theme color customization
 ├── fixtures/                         # Test utilities and helpers
 │   └── test-utils.ts                 # Page objects, helpers, constants
 └── README.md                         # Test documentation
@@ -436,11 +444,11 @@ pnpm exec playwright show-trace test-results/*/trace.zip
 
 | Category | Test Files | Test Count | Status |
 |----------|------------|------------|--------|
-| Security | 3 | 28 | ✅ Complete |
-| Timer | 3 | 31 | ✅ Complete |
-| Tasks | 2 | 25 | ✅ Complete |
-| UI | 2 | 17 | ✅ Complete |
-| **Total** | **10** | **99** | **✅ 100%** |
+| Security | 4 | 36 | ✅ Complete |
+| Timer | 4 | 45 | ✅ Complete |
+| Tasks | 4 | 56 | ✅ Complete |
+| UI | 6 | 53 | ✅ Complete |
+| **Total** | **18** | **190** | **✅ 100%** |
 
 ## References
 

@@ -2,8 +2,12 @@
 import { getVersion } from '~/utils/version'
 
 const open = ref(false)
+const { changelog } = useChangelog()
 
 const version = computed(() => `v${getVersion()}`)
+
+// Get latest 5 changelog entries for display
+const recentChangelog = computed(() => changelog.slice(0, 5))
 
 const tabs = [
   {
@@ -25,6 +29,11 @@ const tabs = [
     label: 'Tips',
     icon: 'i-lucide-lightbulb',
     slot: 'tips' as const
+  },
+  {
+    label: 'Changelog',
+    icon: 'i-lucide-history',
+    slot: 'changelog' as const
   }
 ]
 </script>
@@ -381,6 +390,92 @@ const tabs = [
                 <p class="text-xs text-muted">
                   Toggle theme with the sun/moon icon in the header.
                 </p>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Changelog Tab -->
+        <template #changelog>
+          <div class="space-y-4 pt-4 max-h-64 overflow-y-auto">
+            <div
+              v-for="entry in recentChangelog"
+              :key="entry.version"
+              class="border-b border-default pb-3 last:border-0"
+            >
+              <div class="flex items-center gap-2 mb-2">
+                <span class="text-sm font-semibold text-primary">v{{ entry.version }}</span>
+                <span class="text-xs text-muted">{{ entry.date }}</span>
+              </div>
+              <div class="space-y-1.5">
+                <div
+                  v-if="entry.changes.added?.length"
+                  class="flex items-start gap-2"
+                >
+                  <UIcon
+                    name="i-lucide-plus-circle"
+                    class="size-3.5 text-success shrink-0 mt-0.5"
+                  />
+                  <ul class="text-xs text-muted space-y-0.5">
+                    <li
+                      v-for="(item, i) in entry.changes.added"
+                      :key="i"
+                    >
+                      {{ item }}
+                    </li>
+                  </ul>
+                </div>
+                <div
+                  v-if="entry.changes.changed?.length"
+                  class="flex items-start gap-2"
+                >
+                  <UIcon
+                    name="i-lucide-edit"
+                    class="size-3.5 text-info shrink-0 mt-0.5"
+                  />
+                  <ul class="text-xs text-muted space-y-0.5">
+                    <li
+                      v-for="(item, i) in entry.changes.changed"
+                      :key="i"
+                    >
+                      {{ item }}
+                    </li>
+                  </ul>
+                </div>
+                <div
+                  v-if="entry.changes.fixed?.length"
+                  class="flex items-start gap-2"
+                >
+                  <UIcon
+                    name="i-lucide-wrench"
+                    class="size-3.5 text-warning shrink-0 mt-0.5"
+                  />
+                  <ul class="text-xs text-muted space-y-0.5">
+                    <li
+                      v-for="(item, i) in entry.changes.fixed"
+                      :key="i"
+                    >
+                      {{ item }}
+                    </li>
+                  </ul>
+                </div>
+                <div
+                  v-if="entry.changes.removed?.length"
+                  class="flex items-start gap-2"
+                >
+                  <UIcon
+                    name="i-lucide-minus-circle"
+                    class="size-3.5 text-error shrink-0 mt-0.5"
+                  />
+                  <ul class="text-xs text-muted space-y-0.5">
+                    <li
+                      v-for="(item, i) in entry.changes.removed"
+                      :key="i"
+                    >
+                      {{ item }}
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
           </div>
