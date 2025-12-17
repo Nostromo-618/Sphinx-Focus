@@ -33,6 +33,10 @@ const taskListRef = ref<{ tasks: Array<{ id: string, text: string, completed: bo
 const showSettingsModal = ref(false)
 const showTaskSettingsModal = ref(false)
 
+// Card drag and drop state
+const draggedCardId = ref<'timer' | 'tasks' | null>(null)
+const dragOverCardId = ref<'timer' | 'tasks' | null>(null)
+
 // Rest mode stage management
 // Stage 0: Normal mode (no rest)
 // Stage 2: Immersive centered rest mode with RestModeOverlay
@@ -202,6 +206,61 @@ onUnmounted(() => {
 function handleSkip() {
   focusTimerRef.value?.skipSession()
 }
+
+// Card order computed property
+const cardOrder = computed(() => settings.cardOrder)
+
+// Grid column classes based on card order
+const gridColsClass = computed(() => {
+  return cardOrder.value === 'timer-first'
+    ? 'md:grid-cols-[1fr_1.618fr]'
+    : 'md:grid-cols-[1.618fr_1fr]'
+})
+
+// Card drag handlers
+function handleCardDragStart(event: DragEvent, cardId: 'timer' | 'tasks') {
+  draggedCardId.value = cardId
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData('text/plain', cardId)
+  }
+}
+
+function handleCardDragOver(event: DragEvent, cardId: 'timer' | 'tasks') {
+  event.preventDefault()
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move'
+  }
+  if (draggedCardId.value !== cardId) {
+    dragOverCardId.value = cardId
+  }
+}
+
+function handleCardDragLeave() {
+  dragOverCardId.value = null
+}
+
+function handleCardDrop(event: DragEvent, cardId: 'timer' | 'tasks') {
+  event.preventDefault()
+
+  if (!draggedCardId.value || draggedCardId.value === cardId) {
+    draggedCardId.value = null
+    dragOverCardId.value = null
+    return
+  }
+
+  // Swap the card order
+  const newOrder = cardOrder.value === 'timer-first' ? 'tasks-first' : 'timer-first'
+  updateSetting('cardOrder', newOrder)
+
+  draggedCardId.value = null
+  dragOverCardId.value = null
+}
+
+function handleCardDragEnd() {
+  draggedCardId.value = null
+  dragOverCardId.value = null
+}
 </script>
 
 <template>
@@ -216,13 +275,26 @@ function handleSkip() {
           'blur-3xl opacity-0': restTransition === 'exit-hide'
         }"
       >
-        <div class="grid grid-cols-1 md:grid-cols-[1fr_1.618fr] gap-4 relative">
+        <div class="grid grid-cols-1 gap-4 relative" :class="gridColsClass">
           <!-- Timer Card -->
           <UCard
+            v-if="cardOrder === 'timer-first'"
             class="relative z-[60] transition-all duration-1000"
+            :class="{
+              'opacity-50': draggedCardId === 'timer',
+              'ring-2 ring-primary': dragOverCardId === 'timer' && draggedCardId !== 'timer'
+            }"
           >
             <template #header>
-              <div class="flex items-center justify-between w-full">
+              <div
+                class="flex items-center justify-between w-full hover:cursor-move"
+                draggable="true"
+                @dragstart="handleCardDragStart($event, 'timer')"
+                @dragover="handleCardDragOver($event, 'timer')"
+                @dragleave="handleCardDragLeave"
+                @drop="handleCardDrop($event, 'timer')"
+                @dragend="handleCardDragEnd"
+              >
                 <h3
                   class="text-lg font-semibold transition-colors"
                   :class="{
@@ -260,13 +332,24 @@ function handleSkip() {
 
           <!-- Task List Card - blurred via quick toggle during focus mode -->
           <UCard
+            v-if="cardOrder === 'timer-first'"
             class="relative z-10 transition-all duration-500"
             :class="{
-              'blur-md opacity-50': taskListBlurred && restTransition === 'none'
+              'blur-md opacity-50': taskListBlurred && restTransition === 'none',
+              'opacity-50': draggedCardId === 'tasks',
+              'ring-2 ring-primary': dragOverCardId === 'tasks' && draggedCardId !== 'tasks'
             }"
           >
             <template #header>
-              <div class="flex items-center justify-between w-full">
+              <div
+                class="flex items-center justify-between w-full hover:cursor-move"
+                draggable="true"
+                @dragstart="handleCardDragStart($event, 'tasks')"
+                @dragover="handleCardDragOver($event, 'tasks')"
+                @dragleave="handleCardDragLeave"
+                @drop="handleCardDrop($event, 'tasks')"
+                @dragend="handleCardDragEnd"
+              >
                 <h3 class="text-lg font-semibold">
                   Task List
                 </h3>
@@ -282,6 +365,97 @@ function handleSkip() {
               </div>
             </template>
             <TaskList ref="taskListRef" />
+          </UCard>
+
+          <!-- Task List Card (when first) -->
+          <UCard
+            v-if="cardOrder === 'tasks-first'"
+            class="relative z-10 transition-all duration-500"
+            :class="{
+              'blur-md opacity-50': taskListBlurred && restTransition === 'none',
+              'opacity-50': draggedCardId === 'tasks',
+              'ring-2 ring-primary': dragOverCardId === 'tasks' && draggedCardId !== 'tasks'
+            }"
+          >
+            <template #header>
+              <div
+                class="flex items-center justify-between w-full hover:cursor-move"
+                draggable="true"
+                @dragstart="handleCardDragStart($event, 'tasks')"
+                @dragover="handleCardDragOver($event, 'tasks')"
+                @dragleave="handleCardDragLeave"
+                @drop="handleCardDrop($event, 'tasks')"
+                @dragend="handleCardDragEnd"
+              >
+                <h3 class="text-lg font-semibold">
+                  Task List
+                </h3>
+                <UButton
+                  data-testid="task-settings-button"
+                  icon="i-lucide-settings"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Task settings"
+                  @click="showTaskSettingsModal = true"
+                />
+              </div>
+            </template>
+            <TaskList ref="taskListRef" />
+          </UCard>
+
+          <!-- Timer Card (when second) -->
+          <UCard
+            v-if="cardOrder === 'tasks-first'"
+            class="relative z-[60] transition-all duration-1000"
+            :class="{
+              'opacity-50': draggedCardId === 'timer',
+              'ring-2 ring-primary': dragOverCardId === 'timer' && draggedCardId !== 'timer'
+            }"
+          >
+            <template #header>
+              <div
+                class="flex items-center justify-between w-full hover:cursor-move"
+                draggable="true"
+                @dragstart="handleCardDragStart($event, 'timer')"
+                @dragover="handleCardDragOver($event, 'timer')"
+                @dragleave="handleCardDragLeave"
+                @drop="handleCardDrop($event, 'timer')"
+                @dragend="handleCardDragEnd"
+              >
+                <h3
+                  class="text-lg font-semibold transition-colors"
+                  :class="{
+                    'text-primary': timerTitle !== 'Focus Timer' && timerTitle !== 'Rest'
+                  }"
+                >
+                  {{ timerTitle }}
+                </h3>
+                <UButton
+                  v-if="showQuickBlurButton"
+                  :icon="taskListBlurred ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Toggle task list blur"
+                  @click="toggleTaskListBlur"
+                />
+              </div>
+            </template>
+            <div class="relative">
+              <!-- Settings button - top right of body -->
+              <div class="absolute top-0 right-0">
+                <UButton
+                  icon="i-lucide-settings"
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Timer Settings"
+                  @click="showSettingsModal = true"
+                />
+              </div>
+              <FocusTimer ref="focusTimerRef" />
+            </div>
           </UCard>
         </div>
       </div>

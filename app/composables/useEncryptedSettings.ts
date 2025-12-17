@@ -16,6 +16,8 @@ export interface EncryptedSettings {
   // Task settings
   taskFadeDuration: number // seconds
   taskPosition: 'top' | 'bottom'
+  // Layout settings
+  cardOrder: 'timer-first' | 'tasks-first'
 }
 
 const STORAGE_KEY = 'sphinx-focus-settings-encrypted'
@@ -27,7 +29,8 @@ const DEFAULT_SETTINGS: EncryptedSettings = {
   blurMode: true,
   quickBlur: true, // Default to blurred when auto-blur is active
   taskFadeDuration: 55,
-  taskPosition: 'bottom'
+  taskPosition: 'bottom',
+  cardOrder: 'timer-first'
 }
 
 // Shared reactive state (module-level so all components share the same state)
