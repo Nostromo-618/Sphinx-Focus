@@ -223,6 +223,19 @@ function handleCardDragStart(event: DragEvent, cardId: 'timer' | 'tasks') {
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('text/plain', cardId)
+
+    // Find the parent card element for the drag ghost image
+    // The header div is inside UCard's header slot, so we traverse up to find the card
+    const header = event.currentTarget as HTMLElement
+    const headerSlot = header.closest('[data-slot="header"]')
+    const card = headerSlot?.parentElement as HTMLElement | null
+    if (card) {
+      // Calculate offset to position the ghost image at the cursor position
+      const rect = card.getBoundingClientRect()
+      const offsetX = event.clientX - rect.left
+      const offsetY = event.clientY - rect.top
+      event.dataTransfer.setDragImage(card, offsetX, offsetY)
+    }
   }
 }
 

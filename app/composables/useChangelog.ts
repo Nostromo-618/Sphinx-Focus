@@ -12,6 +12,16 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.3.2',
+    date: '2025-12-17',
+    changes: {
+      added: [
+        'Draggable card reordering: drag card headers to swap timer and task list positions',
+        'Card order preference persists across sessions'
+      ]
+    }
+  },
+  {
     version: '2.3.1',
     date: '2025-12-08',
     changes: {
@@ -203,7 +213,7 @@ export const changelogData: ChangelogEntry[] = [
 export function useChangelog() {
   return {
     changelog: changelogData,
-    getLatestVersion: () => changelogData[0]?.version || '2.3.1',
+    getLatestVersion: () => changelogData[0]?.version || '2.3.2',
     getVersionEntry: (version: string) => {
       return changelogData.find(entry => entry.version === version)
     }
