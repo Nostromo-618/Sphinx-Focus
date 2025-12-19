@@ -34,6 +34,11 @@ const tabs = [
     label: 'Changelog',
     icon: 'i-lucide-history',
     slot: 'changelog' as const
+  },
+  {
+    label: 'Disclaimer',
+    icon: 'i-lucide-file-text',
+    slot: 'disclaimer' as const
   }
 ]
 </script>
@@ -42,8 +47,8 @@ const tabs = [
   <UModal
     v-model:open="open"
     title="About Sphinx Focus"
-    description="Focus. Privacy. Security. Rest."
-    :ui="{ content: 'sm:max-w-xl' }"
+    description="Focus. Rest. Limit distractions. Stay productive."
+    :ui="{ content: 'sm:max-w-2xl' }"
   >
     <!-- Trigger: Logo text -->
     <button
@@ -66,7 +71,7 @@ const tabs = [
             About Sphinx Focus
           </h2>
           <p class="text-sm text-muted">
-            Focus. Privacy. Security. Rest.
+            Focus. Rest. Limit distractions. Stay productive.
           </p>
         </div>
       </div>
@@ -77,7 +82,10 @@ const tabs = [
         :items="tabs"
         variant="link"
         color="primary"
-        :ui="{ trigger: 'grow justify-center' }"
+        :ui="{
+          list: 'overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0',
+          trigger: 'flex-shrink-0 whitespace-nowrap'
+        }"
         class="w-full"
       >
         <!-- Focus Tab -->
@@ -230,7 +238,7 @@ const tabs = [
               />
               <div>
                 <p class="text-sm font-medium text-default">
-                  Free Forever
+                  Free to Use
                 </p>
                 <p class="text-xs text-muted">
                   No ads, no subscriptions, no hidden costs
@@ -477,6 +485,95 @@ const tabs = [
                   </ul>
                 </div>
               </div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Disclaimer Tab -->
+        <template #disclaimer>
+          <div class="space-y-4 pt-4">
+            <div class="flex items-start gap-3">
+              <UIcon
+                name="i-lucide-alert-triangle"
+                class="size-5 text-warning shrink-0 mt-0.5"
+              />
+              <div>
+                <p class="text-sm font-medium text-default">
+                  Experimental Application
+                </p>
+                <p class="text-xs text-muted">
+                  Sphinx Focus is provided as-is for experimental and demonstration purposes
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <UIcon
+                name="i-lucide-shield-alert"
+                class="size-5 text-warning shrink-0 mt-0.5"
+              />
+              <div>
+                <p class="text-sm font-medium text-default">
+                  No Warranties or Liability
+                </p>
+                <p class="text-xs text-muted">
+                  The developer assumes no responsibility for data loss, damages, or issues arising from use
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <UIcon
+                name="i-lucide-user-check"
+                class="size-5 text-primary shrink-0 mt-0.5"
+              />
+              <div>
+                <p class="text-sm font-medium text-default">
+                  User Responsibility
+                </p>
+                <p class="text-xs text-muted">
+                  You assume full responsibility for using this application and protecting your data
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3">
+              <UIcon
+                name="i-lucide-hard-drive"
+                class="size-5 text-primary shrink-0 mt-0.5"
+              />
+              <div>
+                <p class="text-sm font-medium text-default">
+                  Local Storage Only
+                </p>
+                <p class="text-xs text-muted">
+                  All data is stored locally. The developer is not responsible for data loss or corruption
+                </p>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-lg bg-warning/10 border border-warning/20">
+              <p class="text-xs text-warning flex items-start gap-2">
+                <UIcon
+                  name="i-lucide-info"
+                  class="size-4 shrink-0 mt-0.5"
+                />
+                <span>By using this application, you acknowledge that you have read, understood, and agree to the full disclaimer.</span>
+              </p>
+            </div>
+
+            <div class="pt-2 border-t border-border">
+              <a
+                href="https://github.com/Nostromo-618/Sphinx-Focus/blob/main/DISCLAIMER.md"
+                target="_blank"
+                class="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                <UIcon
+                  name="i-lucide-external-link"
+                  class="size-3"
+                />
+                <span>View full disclaimer on GitHub</span>
+              </a>
             </div>
           </div>
         </template>

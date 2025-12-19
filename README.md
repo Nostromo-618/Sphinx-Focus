@@ -61,7 +61,7 @@ pnpm generate
 
 ## Security
 
-All dependencies are audited (2025-12-17) using [AuditJS](https://github.com/sonatype-nexus-community/auditjs) with Sonatype OSS Index:
+All dependencies are audited (2025-12-19) using [AuditJS](https://github.com/sonatype-nexus-community/auditjs) with Sonatype OSS Index:
 
 ```
  Sonatype OSS Index results:

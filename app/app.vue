@@ -28,28 +28,56 @@ const { initialize, isInitialized: _isInitialized, isUnlocked, currentMode, isFi
 // Theme state
 const { initialize: initializeTheme } = useThemeSettings()
 
+// Disclaimer state
+const DISCLAIMER_STORAGE_KEY = 'sphinx-focus-disclaimer-accepted'
+const showDisclaimer = ref(false)
+const showGoodbye = ref(false)
 const showSetupModal = ref(false)
 const showPINModal = ref(false)
 const showClearConfirm = ref(false)
 const appReady = ref(false)
 const isSetupModalDismissible = ref(false)
 
+function isDisclaimerAccepted(): boolean {
+  if (import.meta.server) return false
+  return localStorage.getItem(DISCLAIMER_STORAGE_KEY) === 'true'
+}
+
+function acceptDisclaimer(): void {
+  if (import.meta.server) return
+  localStorage.setItem(DISCLAIMER_STORAGE_KEY, 'true')
+  showDisclaimer.value = false
+  proceedToSecurityFlow()
+}
+
+function proceedToSecurityFlow(): void {
+  // After disclaimer is accepted, proceed with security initialization
+  initialize().then(() => {
+    if (isFirstRun()) {
+      // First time user - show security setup (non-dismissible)
+      showSetupModal.value = true
+      isSetupModalDismissible.value = false
+    } else if (currentMode.value === 'pin' && !isUnlocked.value) {
+      // Returning PIN user - need to unlock
+      showPINModal.value = true
+    } else {
+      // Auto mode or already unlocked
+      appReady.value = true
+    }
+  })
+}
+
 onMounted(async () => {
   // Initialize theme first (loads from localStorage)
   initializeTheme()
 
-  await initialize()
-
-  if (isFirstRun()) {
-    // First time user - show security setup (non-dismissible)
-    showSetupModal.value = true
-    isSetupModalDismissible.value = false
-  } else if (currentMode.value === 'pin' && !isUnlocked.value) {
-    // Returning PIN user - need to unlock
-    showPINModal.value = true
+  // Check disclaimer acceptance first
+  if (!isDisclaimerAccepted()) {
+    // Show disclaimer modal (blocking)
+    showDisclaimer.value = true
   } else {
-    // Auto mode or already unlocked
-    appReady.value = true
+    // Disclaimer already accepted - proceed to security flow
+    await proceedToSecurityFlow()
   }
 })
 
@@ -106,10 +134,67 @@ function confirmClearData() {
 function cancelClearData() {
   showClearConfirm.value = false
 }
+
+function handleDisclaimerAccept() {
+  acceptDisclaimer()
+}
+
+function handleDisclaimerDecline() {
+  showDisclaimer.value = false
+  showGoodbye.value = true
+}
+
+function handleReconsider() {
+  showGoodbye.value = false
+  showDisclaimer.value = true
+}
 </script>
 
 <template>
   <UApp>
+    <!-- Disclaimer Modal (First Visit) -->
+    <DisclaimerModal
+      v-if="showDisclaimer"
+      @accept="handleDisclaimerAccept"
+      @decline="handleDisclaimerDecline"
+    />
+
+    <!-- Goodbye State (User Declined Disclaimer) -->
+    <div
+      v-if="showGoodbye"
+      class="absolute inset-0 min-h-screen flex items-center justify-center bg-background"
+    >
+      <div class="container mx-auto px-4 max-w-md">
+        <div class="text-center space-y-6">
+          <div class="flex justify-center">
+            <div class="p-4 rounded-full bg-muted">
+              <UIcon
+                name="i-lucide-hand-wave"
+                class="size-12 text-muted"
+              />
+            </div>
+          </div>
+          <div class="space-y-2">
+            <h1 class="text-2xl font-semibold text-highlighted">
+              Thank You for Your Interest
+            </h1>
+            <p class="text-muted">
+              We understand that you prefer not to proceed. To use Sphinx Focus, you must accept the disclaimer and terms of use.
+            </p>
+          </div>
+          <div class="pt-4">
+            <UButton
+              label="Reconsider"
+              color="primary"
+              size="lg"
+              block
+              @click="handleReconsider"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Security Setup Modal (First Run or Change Mode) -->
     <SecuritySetupModal
       v-if="showSetupModal"
@@ -175,8 +260,6 @@ function cancelClearData() {
 
       <template #right>
         <div class="hidden sm:flex items-center gap-1.5">
-          <VersionButton />
-
           <ThemePickerModal />
 
           <ColorModeButton />
@@ -200,8 +283,6 @@ function cancelClearData() {
 
       <template #body>
         <div class="flex flex-col gap-2">
-          <VersionButton />
-
           <ThemePickerModal />
 
           <ColorModeButton />
@@ -229,7 +310,7 @@ function cancelClearData() {
         <NuxtPage />
       </div>
       <div
-        v-if="!appReady && !showSetupModal && !showPINModal"
+        v-if="!appReady && !showSetupModal && !showPINModal && !showDisclaimer && !showGoodbye"
         class="absolute inset-0 min-h-screen flex items-center justify-center bg-background"
       >
         <div class="flex flex-col items-center gap-4">

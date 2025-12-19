@@ -12,6 +12,24 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.3.3',
+    date: '2025-12-19',
+    changes: {
+      added: [
+        'First-visit disclaimer modal: non-skippable terms acceptance required before app use',
+        'Disclaimer tab in About modal with summary and link to full disclaimer',
+        'Goodbye state for users who decline disclaimer with option to reconsider'
+      ],
+      changed: [
+        'About modal tabs now scroll horizontally on smaller screens to prevent text truncation',
+        'About modal width increased to better accommodate all tabs',
+      ],
+      removed: [
+        'Version button from header (version info now available in About modal Changelog tab)'
+      ]
+    }
+  },
+  {
     version: '2.3.2',
     date: '2025-12-17',
     changes: {

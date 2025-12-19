@@ -16,7 +16,7 @@ test.describe('About Modal', () => {
 
     // Modal should be visible with header content
     await expect(page.getByText('About Sphinx Focus')).toBeVisible()
-    await expect(page.getByText('Focus. Privacy. Security. Rest.')).toBeVisible()
+    await expect(page.getByText('Focus. Rest. Limit distractions. Stay productive.')).toBeVisible()
   })
 
   test('should display all four tabs', async ({ page }) => {
