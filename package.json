@@ -18,7 +18,7 @@
     "test:chromium": "playwright test --project=chromium"
   },
   "dependencies": {
-    "@iconify-json/lucide": "^1.2.81",
+    "@iconify-json/lucide": "^1.2.82",
     "@iconify-json/simple-icons": "^1.2.63",
     "@nuxt/icon": "^2.1.1",
     "@nuxt/ui": "^4.3.0",

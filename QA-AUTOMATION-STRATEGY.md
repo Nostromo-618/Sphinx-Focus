@@ -1,14 +1,14 @@
 # Sphinx Focus QA Automation Strategy
 
-> **Version:** 2.3.1  
-> **Last Updated:** 2025-12-08  
+> **Version:** 2.3.3  
+> **Last Updated:** 2025-12-20  
 > **Status:** Complete (100% Coverage Achieved)
 
 ## Overview
 
 This document defines the QA automation strategy for Sphinx Focus, a Pomodoro timer and encrypted task manager built with Nuxt 4, Vue 3, and Nuxt UI v4.
 
-**Current Status:** 190 E2E tests covering all defined features.
+**Current Status:** 212 E2E tests covering all defined features.
 
 ## Testing Tools
 
@@ -60,23 +60,25 @@ This document defines the QA automation strategy for Sphinx Focus, a Pomodoro ti
 ```
 tests/
 ├── e2e/                              # End-to-end browser tests
-│   ├── security/                     # Security flow tests (4 files, 36 tests)
+│   ├── security/                     # Security flow tests (5 files, 47 tests)
 │   │   ├── auto-mode.spec.ts         # Auto mode security
+│   │   ├── disclaimer.spec.ts        # First-visit disclaimer flow
 │   │   ├── first-run-setup.spec.ts   # First-time user setup
 │   │   ├── mode-change.spec.ts       # Security mode switching
 │   │   └── pin-unlock.spec.ts        # PIN unlock & lock flows
-│   ├── timer/                        # Timer functionality tests (4 files, 45 tests)
+│   ├── timer/                        # Timer functionality tests (4 files, 49 tests)
 │   │   ├── rest-mode-visual.spec.ts  # Rest mode overlay & transitions
 │   │   ├── timer-controls.spec.ts    # Start, pause, resume, reset
 │   │   ├── timer-persistence.spec.ts # State persistence
 │   │   └── timer-settings.spec.ts    # Duration & blur settings
-│   ├── tasks/                        # Task management tests (4 files, 56 tests)
+│   ├── tasks/                        # Task management tests (4 files, 55 tests)
 │   │   ├── task-crud.spec.ts         # CRUD operations
 │   │   ├── task-drag-drop.spec.ts    # Drag & drop reordering
 │   │   ├── task-fade-away.spec.ts    # Completed task fading
 │   │   └── task-settings.spec.ts     # Task position & fade settings
-│   └── ui/                           # UI/UX tests (6 files, 53 tests)
-│       ├── about-modal.spec.ts       # About modal & tabs
+│   └── ui/                           # UI/UX tests (7 files, 61 tests)
+│       ├── about-modal.spec.ts       # About modal & tabs (incl. changelog, disclaimer)
+│       ├── card-reordering.spec.ts   # Timer/Task card drag reordering
 │       ├── color-mode.spec.ts        # Light/dark/system theme
 │       ├── modal-dismiss.spec.ts     # Modal dismiss behaviors
 │       ├── quick-blur-toggle.spec.ts # Quick blur toggle button
@@ -108,9 +110,9 @@ tests/
 
 1. **First-Time User Setup**
    ```
-   App Load → Security Modal → Choose Mode → (PIN Setup | Auto) → App Ready
+   App Load → Disclaimer Modal → Accept → Security Modal → Choose Mode → (PIN Setup | Auto) → App Ready
    ```
-   - Tests: `first-run-setup.spec.ts` (9 tests)
+   - Tests: `disclaimer.spec.ts` (10 tests), `first-run-setup.spec.ts` (9 tests)
 
 2. **Returning PIN User**
    ```
@@ -128,7 +130,7 @@ tests/
    ```
    Add Task → View in List → Toggle Complete → Reorder → Delete
    ```
-   - Tests: `task-crud.spec.ts` (19 tests), `task-drag-drop.spec.ts` (6 tests)
+   - Tests: `task-crud.spec.ts` (19 tests), `task-drag-drop.spec.ts` (8 tests)
 
 ## Testing Strategies
 
@@ -374,6 +376,8 @@ export const REST_DURATION_SECONDS = 5 * 60
 export const STORAGE_KEYS = {
   security: 'sphinx-focus-security',
   tasks: 'sphinx-focus-tasks-encrypted',
+  settings: 'sphinx-focus-settings-encrypted',
+  disclaimer: 'sphinx-focus-disclaimer-accepted',
   timer: 'sphinx-focus-timer',
   focusDuration: 'sphinx-focus-focus-duration',
   restDuration: 'sphinx-focus-rest-duration',
@@ -444,11 +448,11 @@ pnpm exec playwright show-trace test-results/*/trace.zip
 
 | Category | Test Files | Test Count | Status |
 |----------|------------|------------|--------|
-| Security | 4 | 36 | ✅ Complete |
-| Timer | 4 | 45 | ✅ Complete |
-| Tasks | 4 | 56 | ✅ Complete |
-| UI | 6 | 53 | ✅ Complete |
-| **Total** | **18** | **190** | **✅ 100%** |
+| Security | 5 | 47 | ✅ Complete |
+| Timer | 4 | 49 | ✅ Complete |
+| Tasks | 4 | 55 | ✅ Complete |
+| UI | 7 | 61 | ✅ Complete |
+| **Total** | **20** | **212** | **✅ 100%** |
 
 ## References
 

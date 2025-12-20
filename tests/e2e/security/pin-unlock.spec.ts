@@ -8,6 +8,9 @@ test.describe('PIN Unlock Flow', () => {
     await clearStorage(page)
     await page.reload()
 
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Complete PIN setup first
     await page.getByTestId('security-pin-option').click()
 

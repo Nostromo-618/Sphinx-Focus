@@ -10,7 +10,11 @@ test.describe('First Run Security Setup', () => {
   })
 
   test('should display security setup modal on first run', async ({ page }) => {
-    // Modal should be visible
+    // First, accept disclaimer
+    await expect(page.getByText('Disclaimer & Terms of Use')).toBeVisible()
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
+    // Then security setup modal should be visible
     await expect(page.getByText('Choose Your Security Level')).toBeVisible()
     await expect(page.getByText('How would you like to protect your tasks?')).toBeVisible()
 
@@ -20,6 +24,9 @@ test.describe('First Run Security Setup', () => {
   })
 
   test('should complete setup with Auto mode (Quick Access)', async ({ page }) => {
+    // First, accept disclaimer
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Click Auto mode option
     await page.getByTestId('security-auto-option').click()
 
@@ -37,6 +44,9 @@ test.describe('First Run Security Setup', () => {
   })
 
   test('should show PIN setup form when selecting PIN mode', async ({ page }) => {
+    // First, accept disclaimer
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Click PIN mode option
     await page.getByTestId('security-pin-option').click()
 
@@ -55,6 +65,9 @@ test.describe('First Run Security Setup', () => {
   })
 
   test('should complete setup with PIN mode', async ({ page }) => {
+    // First, accept disclaimer
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Click PIN mode option
     await page.getByTestId('security-pin-option').click()
 
@@ -89,6 +102,9 @@ test.describe('First Run Security Setup', () => {
   })
 
   test('should show error when PINs do not match', async ({ page }) => {
+    // First, accept disclaimer
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Click PIN mode option
     await page.getByTestId('security-pin-option').click()
 
@@ -115,6 +131,9 @@ test.describe('First Run Security Setup', () => {
   })
 
   test('should auto-focus next PIN input when typing', async ({ page }) => {
+    // First, accept disclaimer
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Click PIN mode option
     await page.getByTestId('security-pin-option').click()
 
@@ -127,6 +146,9 @@ test.describe('First Run Security Setup', () => {
   })
 
   test('should allow going back from PIN setup to mode selection', async ({ page }) => {
+    // First, accept disclaimer
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Click PIN mode option
     await page.getByTestId('security-pin-option').click()
 
@@ -141,10 +163,16 @@ test.describe('First Run Security Setup', () => {
   })
 
   test('should display recommended badge on PIN option', async ({ page }) => {
+    // First, accept disclaimer
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     await expect(page.getByText('Recommended')).toBeVisible()
   })
 
   test('should show security info for both modes', async ({ page }) => {
+    // First, accept disclaimer
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // PIN mode info
     await expect(page.getByText('Maximum Security')).toBeVisible()
     await expect(page.getByText('Key never stored')).toBeVisible()

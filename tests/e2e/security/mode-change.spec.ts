@@ -9,6 +9,9 @@ test.describe('Security Mode Change - Task Persistence', () => {
   })
 
   test('should preserve tasks when changing from auto mode to PIN mode', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     const app = new SphinxFocusPage(page)
 
     // Setup auto mode
@@ -39,6 +42,9 @@ test.describe('Security Mode Change - Task Persistence', () => {
   })
 
   test('should preserve tasks when changing from PIN mode to auto mode', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     const app = new SphinxFocusPage(page)
 
     // Setup PIN mode
@@ -64,6 +70,9 @@ test.describe('Security Mode Change - Task Persistence', () => {
   })
 
   test('should preserve multiple tasks during mode change', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     const app = new SphinxFocusPage(page)
 
     // Setup auto mode
@@ -96,6 +105,9 @@ test.describe('Security Mode Change - Task Persistence', () => {
   })
 
   test('should preserve completed tasks during mode change', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     const app = new SphinxFocusPage(page)
 
     // Setup auto mode
@@ -128,6 +140,9 @@ test.describe('Security Mode Change - Task Persistence', () => {
   })
 
   test('should preserve tasks after page refresh after mode change from auto to PIN', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     const app = new SphinxFocusPage(page)
 
     // Setup auto mode
@@ -165,6 +180,9 @@ test.describe('Security Mode Change - Task Persistence', () => {
   })
 
   test('should preserve tasks after page refresh after mode change from PIN to auto', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     const app = new SphinxFocusPage(page)
 
     // Setup PIN mode
@@ -195,6 +213,9 @@ test.describe('Security Mode Change - Task Persistence', () => {
   })
 
   test('should preserve task order during mode change', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     const app = new SphinxFocusPage(page)
 
     // Setup auto mode
@@ -227,6 +248,9 @@ test.describe('Security Mode Change - Task Persistence', () => {
   })
 
   test('should handle mode change with no existing tasks gracefully', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     const app = new SphinxFocusPage(page)
 
     // Setup auto mode without adding tasks

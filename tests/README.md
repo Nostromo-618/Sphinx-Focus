@@ -2,9 +2,9 @@
 
 This directory contains automated E2E tests for the Sphinx Focus application using Playwright.
 
-> **Test Count:** 190 tests  
+> **Test Count:** 212 tests  
 > **Coverage:** 100% of defined features  
-> **Last Updated:** 2025-12-08
+> **Last Updated:** 2025-12-20
 
 ## Directory Structure
 
@@ -13,6 +13,7 @@ tests/
 ├── e2e/                              # End-to-end browser tests
 │   ├── security/                     # Security flow tests
 │   │   ├── auto-mode.spec.ts         # [P2 - Medium] Auto mode security
+│   │   ├── disclaimer.spec.ts        # [P0 - Critical] First-visit disclaimer flow
 │   │   ├── first-run-setup.spec.ts   # [P0 - Critical] First-time user setup
 │   │   ├── mode-change.spec.ts       # [P1 - High] Security mode switching
 │   │   └── pin-unlock.spec.ts        # [P0 - Critical] PIN unlock & lock flows
@@ -27,7 +28,8 @@ tests/
 │   │   ├── task-fade-away.spec.ts    # [P2 - Medium] Completed task fading
 │   │   └── task-settings.spec.ts     # [P2 - Medium] Task position & fade settings
 │   └── ui/                           # UI/UX tests
-│       ├── about-modal.spec.ts       # [P3 - Low] About modal & tabs
+│       ├── about-modal.spec.ts       # [P3 - Low] About modal & tabs (incl. changelog, disclaimer)
+│       ├── card-reordering.spec.ts   # [P3 - Low] Timer/Task card drag reordering
 │       ├── color-mode.spec.ts        # [P3 - Low] Light/dark/system theme
 │       ├── modal-dismiss.spec.ts     # [P2 - Medium] Modal dismiss behaviors
 │       ├── quick-blur-toggle.spec.ts # [P2 - Medium] Quick blur toggle button
@@ -89,28 +91,38 @@ Slows down each action by 500ms for observation.
 ### Security (P0 - Critical)
 | Test File | Tests | Coverage |
 |-----------|-------|----------|
+| `disclaimer.spec.ts` | 10 | First-visit disclaimer, agree/disagree, persistence |
 | `first-run-setup.spec.ts` | 9 | First-time modal, PIN setup, auto setup, validation |
 | `pin-unlock.spec.ts` | 13 | Unlock flow, wrong PIN, forgot PIN, lock/unlock cycle |
-| `auto-mode.spec.ts` | 6 | Auto mode persistence, encryption, mode switching |
+| `auto-mode.spec.ts` | 7 | Auto mode persistence, encryption, mode switching |
+| `mode-change.spec.ts` | 8 | Security mode switching, task preservation |
 
 ### Timer (P1-P2)
 | Test File | Tests | Coverage |
 |-----------|-------|----------|
 | `timer-controls.spec.ts` | 14 | Start, pause, resume, reset, skip, mode switching |
 | `timer-persistence.spec.ts` | 7 | State persistence, elapsed time, session expiry |
-| `timer-settings.spec.ts` | 10 | Duration config, validation, blur mode |
+| `timer-settings.spec.ts` | 15 | Duration config, validation, blur mode |
+| `rest-mode-visual.spec.ts` | 13 | Rest mode overlay, transitions, visual feedback |
 
 ### Tasks (P1-P3)
 | Test File | Tests | Coverage |
 |-----------|-------|----------|
 | `task-crud.spec.ts` | 19 | Add, delete, complete, persist, encrypt, sort |
-| `task-drag-drop.spec.ts` | 6 | Drag handle, reorder, persist order |
+| `task-drag-drop.spec.ts` | 8 | Drag handle, reorder, persist order |
+| `task-fade-away.spec.ts` | 12 | Completed task fading, duration settings |
+| `task-settings.spec.ts` | 16 | Task position, fade duration settings |
 
 ### UI (P3)
 | Test File | Tests | Coverage |
 |-----------|-------|----------|
+| `about-modal.spec.ts` | 10 | About modal tabs, changelog, disclaimer, mobile scroll |
+| `card-reordering.spec.ts` | 8 | Timer/task card drag-drop reordering |
 | `color-mode.spec.ts` | 8 | Light/dark/system, persist, dropdown |
+| `modal-dismiss.spec.ts` | 15 | Modal dismiss behaviors (dismissible vs non-dismissible) |
+| `quick-blur-toggle.spec.ts` | 14 | Quick blur toggle during focus |
 | `responsive.spec.ts` | 9 | Desktop, tablet, mobile, orientation |
+| `theme-picker.spec.ts` | 16 | Theme color customization, persistence |
 
 ## Writing Tests
 
@@ -177,7 +189,8 @@ await app.pauseTimer()
 await clearStorage(page)                    // Clear all app data
 await getStorageItem(page, STORAGE_KEYS.security)
 await setStorageItem(page, key, value)
-await bypassSecuritySetup(page)             // Skip security for non-security tests
+await bypassDisclaimer(page)                // Skip disclaimer for non-disclaimer tests
+await bypassSecuritySetup(page)             // Skip security AND disclaimer for non-security tests
 ```
 
 ### Wait Helpers

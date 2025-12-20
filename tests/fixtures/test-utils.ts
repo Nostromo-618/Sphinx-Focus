@@ -17,6 +17,7 @@ export const STORAGE_KEYS = {
   security: 'sphinx-focus-security',
   tasks: 'sphinx-focus-tasks-encrypted',
   settings: 'sphinx-focus-settings-encrypted',
+  disclaimer: 'sphinx-focus-disclaimer-accepted',
   // Legacy keys (for migration tests only - no longer used)
   timer: 'sphinx-focus-timer',
   focusDuration: 'sphinx-focus-focus-duration',
@@ -57,6 +58,11 @@ export class SphinxFocusPage {
    * Complete first-run setup with Auto mode (no PIN)
    */
   async setupAutoMode() {
+    // Accept disclaimer if it's visible
+    const disclaimerButton = this.page.getByRole('button', { name: 'I Agree' })
+    if (await disclaimerButton.isVisible().catch(() => false)) {
+      await disclaimerButton.click()
+    }
     await this.page.getByTestId('security-auto-option').click()
     await this.page.waitForSelector('[data-testid="timer-start"]', { timeout: 10000 })
   }
@@ -65,6 +71,11 @@ export class SphinxFocusPage {
    * Complete first-run setup with PIN mode
    */
   async setupPINMode(pin: string = TEST_PIN) {
+    // Accept disclaimer if it's visible
+    const disclaimerButton = this.page.getByRole('button', { name: 'I Agree' })
+    if (await disclaimerButton.isVisible().catch(() => false)) {
+      await disclaimerButton.click()
+    }
     await this.page.getByTestId('security-pin-option').click()
     await this.enterPIN(pin, 'setup')
     await this.enterPIN(pin, 'confirm')
@@ -235,11 +246,25 @@ export async function getSecurityMode(page: Page): Promise<string | null> {
 // ============================================================================
 
 /**
+ * Bypass disclaimer modal by accepting it in localStorage
+ * Use this for tests that don't focus on disclaimer features
+ */
+export async function bypassDisclaimer(page: Page) {
+  await page.evaluate(() => {
+    localStorage.setItem('sphinx-focus-disclaimer-accepted', 'true')
+  })
+}
+
+/**
  * Setup auto mode directly via localStorage to bypass security modal
  * Use this for tests that don't focus on security features
+ * Also bypasses disclaimer to ensure app is ready
  */
 export async function bypassSecuritySetup(page: Page) {
   await page.evaluate(() => {
+    // Accept disclaimer first
+    localStorage.setItem('sphinx-focus-disclaimer-accepted', 'true')
+
     // Generate a test encryption key
     const testKey = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
 

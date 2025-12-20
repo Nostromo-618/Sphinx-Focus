@@ -9,6 +9,9 @@ test.describe('Auto Mode Security', () => {
   })
 
   test('should complete setup with auto mode and persist across reloads', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Select auto mode
     await page.getByTestId('security-auto-option').click()
 
@@ -24,6 +27,9 @@ test.describe('Auto Mode Security', () => {
   })
 
   test('should store encryption key in auto mode', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Select auto mode
     await page.getByTestId('security-auto-option').click()
     await expect(page.getByTestId('timer-start')).toBeVisible({ timeout: 10000 })
@@ -40,6 +46,9 @@ test.describe('Auto Mode Security', () => {
   })
 
   test('should not show Lock App option in security menu for auto mode', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Select auto mode
     await page.getByTestId('security-auto-option').click()
     await expect(page.getByTestId('timer-start')).toBeVisible({ timeout: 10000 })
@@ -55,6 +64,9 @@ test.describe('Auto Mode Security', () => {
   })
 
   test('should allow changing from auto mode to PIN mode', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Start with auto mode
     await page.getByTestId('security-auto-option').click()
     await expect(page.getByTestId('timer-start')).toBeVisible({ timeout: 10000 })
@@ -90,6 +102,9 @@ test.describe('Auto Mode Security', () => {
   })
 
   test('should allow cancelling mode change and preserve current mode', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Start with auto mode
     await page.getByTestId('security-auto-option').click()
     await expect(page.getByTestId('timer-start')).toBeVisible({ timeout: 10000 })
@@ -122,6 +137,9 @@ test.describe('Auto Mode Security', () => {
   })
 
   test('should encrypt tasks in auto mode', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Setup auto mode
     await page.getByTestId('security-auto-option').click()
     await expect(page.getByTestId('timer-start')).toBeVisible({ timeout: 10000 })
@@ -145,6 +163,9 @@ test.describe('Auto Mode Security', () => {
   })
 
   test('should clear all data option works in auto mode', async ({ page }) => {
+    // Accept disclaimer first
+    await page.getByRole('button', { name: 'I Agree' }).click()
+
     // Setup auto mode
     await page.getByTestId('security-auto-option').click()
     await expect(page.getByTestId('timer-start')).toBeVisible({ timeout: 10000 })
