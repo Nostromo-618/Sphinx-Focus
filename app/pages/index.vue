@@ -29,9 +29,14 @@ const focusTimerRef = ref<{
   resetTimer: () => void
   skipSession: () => void
 } | null>(null)
-const taskListRef = ref<{ tasks: Array<{ id: string, text: string, completed: boolean, order: number }> } | null>(null)
+const taskListRef = ref<{ tasks: Array<{ id: string, text: string, completed: boolean, order: number }>, addTaskFromExternal: (task: any, targetTaskId?: string) => void, removeTask: (id: string) => void, dragOverTaskId: string | null } | null>(null)
+const backlogListRef = ref<{ tasks: Array<{ id: string, text: string, completed: boolean, order: number }>, addTaskFromExternal: (task: any, targetTaskId?: string) => void, removeTask: (id: string) => void, dragOverTaskId: string | null } | null>(null)
 const showSettingsModal = ref(false)
 const showTaskSettingsModal = ref(false)
+
+// Cross-list drag state
+const crossListDragSource = ref<'tasks' | 'backlog' | null>(null)
+const currentTaskDragSource = ref<'tasks' | 'backlog' | null>(null)
 
 // Card drag and drop state
 const draggedCardId = ref<'timer' | 'tasks' | null>(null)
@@ -41,8 +46,10 @@ const dragOverCardId = ref<'timer' | 'tasks' | null>(null)
 // Store actual DOM elements, not component refs
 const timerCardElement = ref<HTMLElement | null>(null)
 const tasksCardElement = ref<HTMLElement | null>(null)
+const backlogCardElement = ref<HTMLElement | null>(null)
 const timerCardRef = ref<any>(null)
 const tasksCardRef = ref<any>(null)
+const backlogCardRef = ref<any>(null)
 const draggedCardElement = ref<HTMLElement | null>(null)
 const globalDragOverListener = ref<((event: DragEvent) => void) | null>(null)
 const overlapCheckFrame = ref<number | null>(null)
@@ -238,10 +245,11 @@ const gridColsClass = computed(() => {
 })
 
 // Update card elements when refs change or card order changes
-watch([timerCardRef, tasksCardRef, cardOrder], () => {
+watch([timerCardRef, tasksCardRef, backlogCardRef, cardOrder], () => {
   nextTick(() => {
     timerCardElement.value = getCardElement(timerCardRef.value)
     tasksCardElement.value = getCardElement(tasksCardRef.value)
+    backlogCardElement.value = getCardElement(backlogCardRef.value)
   })
 }, { immediate: true, flush: 'post' })
 
@@ -262,10 +270,33 @@ function pointInRect(x: number, y: number, rect: DOMRect): boolean {
 
 // Check for overlap between dragged card and target cards
 // Also checks if mouse cursor is over target cards
+// Only checks Timer and Task List cards (same row), excludes Backlog
 function checkCardOverlap(mouseX?: number, mouseY?: number): 'timer' | 'tasks' | null {
   if (!draggedCardId.value || !draggedCardElement.value) return null
+  // Only process Timer/Task List card drags
+  if (draggedCardId.value !== 'timer' && draggedCardId.value !== 'tasks') return null
 
   const draggedRect = draggedCardElement.value.getBoundingClientRect()
+
+  // First, check if mouse/overlap is over Backlog card - if so, return null
+  // (Timer/Task List cards should never be dropped on Backlog)
+  if (backlogCardElement.value) {
+    const backlogRect = backlogCardElement.value.getBoundingClientRect()
+    const mouseOverBacklog = mouseX !== undefined && mouseY !== undefined && pointInRect(mouseX, mouseY, backlogRect)
+    const overlapsBacklog = rectanglesOverlap(draggedRect, backlogRect)
+    
+    // Also check Y position - if mouse is below the first row, reject
+    const firstRowBottom = Math.max(
+      timerCardElement.value?.getBoundingClientRect().bottom || 0,
+      tasksCardElement.value?.getBoundingClientRect().bottom || 0
+    )
+    const mouseBelowFirstRow = mouseY !== undefined && mouseY > firstRowBottom
+    
+    if (mouseOverBacklog || overlapsBacklog || mouseBelowFirstRow) {
+      // Don't allow dropping Timer/Task List cards on Backlog or below first row
+      return null
+    }
+  }
 
   // Check overlap with timer card
   if (draggedCardId.value !== 'timer' && timerCardElement.value) {
@@ -319,8 +350,14 @@ function handleCardDragStart(event: DragEvent, cardId: 'timer' | 'tasks') {
   }
 
   // Set up global dragover listener for overlap detection
-  if (import.meta.client) {
+  // Only for Timer/Task List card dragging (not task items)
+  if (import.meta.client && (cardId === 'timer' || cardId === 'tasks')) {
     const handleGlobalDragOver = (e: DragEvent) => {
+      // Only process if we're still dragging a card (not task items)
+      if (!draggedCardId.value || (draggedCardId.value !== 'timer' && draggedCardId.value !== 'tasks')) {
+        return
+      }
+
       e.preventDefault()
       if (e.dataTransfer) {
         e.dataTransfer.dropEffect = 'move'
@@ -333,11 +370,12 @@ function handleCardDragStart(event: DragEvent, cardId: 'timer' | 'tasks') {
 
       overlapCheckFrame.value = requestAnimationFrame(() => {
         // Pass mouse coordinates for cursor-based detection
+        // This will exclude Backlog area automatically
         const overlappingCard = checkCardOverlap(e.clientX, e.clientY)
         if (overlappingCard) {
           dragOverCardId.value = overlappingCard
         } else {
-          // Clear highlight if no overlap detected
+          // Clear highlight if no overlap detected or if over Backlog
           dragOverCardId.value = null
         }
       })
@@ -349,6 +387,12 @@ function handleCardDragStart(event: DragEvent, cardId: 'timer' | 'tasks') {
 }
 
 function handleCardDragOver(event: DragEvent, cardId: 'timer' | 'tasks') {
+  // Only allow drag over if we're dragging Timer or Task List cards
+  // (not task items from within the lists)
+  if (!draggedCardId.value || (draggedCardId.value !== 'timer' && draggedCardId.value !== 'tasks')) {
+    return
+  }
+
   event.preventDefault()
   if (event.dataTransfer) {
     event.dataTransfer.dropEffect = 'move'
@@ -377,9 +421,39 @@ function handleCardDragLeave(event?: DragEvent) {
 }
 
 function handleCardDrop(event: DragEvent, cardId: 'timer' | 'tasks') {
+  // Only allow drop if we're dragging Timer or Task List cards
+  // (not task items from within the lists)
+  if (!draggedCardId.value || (draggedCardId.value !== 'timer' && draggedCardId.value !== 'tasks')) {
+    return
+  }
+
   event.preventDefault()
+  event.stopPropagation()
 
   if (!draggedCardId.value || draggedCardId.value === cardId) {
+    draggedCardId.value = null
+    draggedCardElement.value = null
+    dragOverCardId.value = null
+    return
+  }
+
+  // Verify we're not dropping below the first row (where Backlog is)
+  const firstRowBottom = Math.max(
+    timerCardElement.value?.getBoundingClientRect().bottom || 0,
+    tasksCardElement.value?.getBoundingClientRect().bottom || 0
+  )
+  if (event.clientY > firstRowBottom) {
+    // Drop is below first row - reject it
+    draggedCardId.value = null
+    draggedCardElement.value = null
+    dragOverCardId.value = null
+    return
+  }
+
+  // Only allow swapping between Timer and Task List (same row)
+  // Verify the drop target is valid (not Backlog)
+  const overlappingCard = checkCardOverlap(event.clientX, event.clientY)
+  if (!overlappingCard || (overlappingCard !== 'timer' && overlappingCard !== 'tasks')) {
     draggedCardId.value = null
     draggedCardElement.value = null
     dragOverCardId.value = null
@@ -411,6 +485,146 @@ function handleCardDragEnd() {
   draggedCardId.value = null
   draggedCardElement.value = null
   dragOverCardId.value = null
+}
+
+// Track task drag source on dragstart by checking event target
+if (import.meta.client) {
+  document.addEventListener('dragstart', (e: DragEvent) => {
+    const target = e.target as HTMLElement
+    // Check if drag is from a task item by looking for data-testid
+    if (target) {
+      const testId = target.getAttribute('data-testid') || target.closest('[data-testid]')?.getAttribute('data-testid')
+      if (testId) {
+        if (testId.startsWith('task-item-') || testId.startsWith('task-checkbox-') || testId.startsWith('task-text-') || testId.startsWith('task-delete-')) {
+          currentTaskDragSource.value = 'tasks'
+        } else if (testId.startsWith('backlog-item-') || testId.startsWith('backlog-checkbox-') || testId.startsWith('backlog-text-') || testId.startsWith('backlog-delete-')) {
+          currentTaskDragSource.value = 'backlog'
+        }
+      }
+    }
+  }, true) // Use capture phase to catch early
+
+  document.addEventListener('dragend', () => {
+    currentTaskDragSource.value = null
+    crossListDragSource.value = null
+  })
+}
+
+// Cross-list drag handlers
+function handleTaskListDragOver(event: DragEvent) {
+  // Check if this drag has our custom data-source type
+  if (event.dataTransfer?.types.includes('data-source')) {
+    event.preventDefault()
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move'
+    }
+    // Don't show outline around card - task items show their own drop indicators
+  }
+}
+
+function handleTaskListDrop(event: DragEvent) {
+  event.preventDefault()
+  const source = event.dataTransfer?.getData('data-source')
+  const taskId = event.dataTransfer?.getData('text/plain')
+
+  if (source === 'backlog' && taskId && backlogListRef.value && taskListRef.value) {
+    const task = backlogListRef.value.tasks.find(t => t.id === taskId)
+    if (task) {
+      // Get target task ID from dragOverTaskId (set by task item's dragover handler)
+      // or find it from the event target as fallback
+      const targetTaskId = taskListRef.value.dragOverTaskId || findTargetTaskId(event, 'task-item-')
+      
+      // Add to TaskList at the target position
+      taskListRef.value.addTaskFromExternal(task, targetTaskId || undefined)
+      // Remove from BacklogList
+      backlogListRef.value.removeTask(taskId)
+    }
+  }
+  crossListDragSource.value = null
+}
+
+// Helper to find task ID from drop target element or element under cursor
+function findTargetTaskId(event: DragEvent, prefix: string): string | undefined {
+  // First, try to find from the event target
+  let element: HTMLElement | null = event.target as HTMLElement
+  while (element) {
+    const testId = element.getAttribute('data-testid')
+    if (testId && testId.startsWith(prefix)) {
+      // Extract task ID from data-testid (e.g., "task-item-123" -> "123")
+      return testId.replace(prefix, '')
+    }
+    element = element.parentElement
+  }
+
+  // If not found, try elementFromPoint to find what's under the cursor
+  if (import.meta.client && event.clientX !== undefined && event.clientY !== undefined) {
+    const elementUnderCursor = document.elementFromPoint(event.clientX, event.clientY) as HTMLElement | null
+    element = elementUnderCursor
+    while (element) {
+      const testId = element.getAttribute('data-testid')
+      if (testId && testId.startsWith(prefix)) {
+        return testId.replace(prefix, '')
+      }
+      element = element.parentElement
+    }
+  }
+
+  return undefined
+}
+
+function handleBacklogListDragOver(event: DragEvent) {
+  // Explicitly reject Timer/Task List card drags - Backlog should never accept card drops
+  if (draggedCardId.value === 'timer' || draggedCardId.value === 'tasks') {
+    // Don't prevent default, don't set dropEffect - this rejects the drop
+    // Also stop propagation to prevent parent handlers from processing it
+    event.stopPropagation()
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'none'
+    }
+    return
+  }
+
+  // Only allow task item drags (with data-source type)
+  if (event.dataTransfer?.types.includes('data-source')) {
+    event.preventDefault()
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move'
+    }
+    // Don't show outline around card - task items show their own drop indicators
+  } else {
+    // Not a task item drag - reject it
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'none'
+    }
+  }
+}
+
+function handleBacklogListDrop(event: DragEvent) {
+  // Explicitly reject Timer/Task List card drops
+  if (draggedCardId.value === 'timer' || draggedCardId.value === 'tasks') {
+    event.stopPropagation()
+    return
+  }
+
+  event.preventDefault()
+  event.stopPropagation()
+  const source = event.dataTransfer?.getData('data-source')
+  const taskId = event.dataTransfer?.getData('text/plain')
+
+  if (source === 'tasks' && taskId && taskListRef.value && backlogListRef.value) {
+    const task = taskListRef.value.tasks.find(t => t.id === taskId)
+    if (task) {
+      // Get target task ID from dragOverTaskId (set by task item's dragover handler)
+      // or find it from the event target as fallback
+      const targetTaskId = backlogListRef.value.dragOverTaskId || findTargetTaskId(event, 'backlog-item-')
+      
+      // Add to BacklogList at the target position
+      backlogListRef.value.addTaskFromExternal(task, targetTaskId || undefined)
+      // Remove from TaskList
+      taskListRef.value.removeTask(taskId)
+    }
+  }
+  crossListDragSource.value = null
 }
 </script>
 
@@ -493,8 +707,8 @@ function handleCardDragEnd() {
             :class="{
               'ring-4 ring-primary': dragOverCardId === 'tasks' && draggedCardId !== 'tasks'
             }"
-            @dragover="handleCardDragOver($event, 'tasks')"
-            @drop="handleCardDrop($event, 'tasks')"
+            @dragover.prevent="handleCardDragOver($event, 'tasks'); handleTaskListDragOver($event)"
+            @drop.prevent="handleCardDrop($event, 'tasks'); handleTaskListDrop($event)"
           >
             <UCard
               class="relative z-10 transition-all duration-500 w-full flex flex-col"
@@ -526,7 +740,9 @@ function handleCardDragEnd() {
                 />
               </div>
             </template>
-            <TaskList ref="taskListRef" />
+            <TaskList
+              ref="taskListRef"
+            />
             </UCard>
           </div>
 
@@ -538,8 +754,8 @@ function handleCardDragEnd() {
             :class="{
               'ring-4 ring-primary': dragOverCardId === 'tasks' && draggedCardId !== 'tasks'
             }"
-            @dragover="handleCardDragOver($event, 'tasks')"
-            @drop="handleCardDrop($event, 'tasks')"
+            @dragover.prevent="handleCardDragOver($event, 'tasks'); handleTaskListDragOver($event)"
+            @drop.prevent="handleCardDrop($event, 'tasks'); handleTaskListDrop($event)"
           >
             <UCard
               class="relative z-10 transition-all duration-500 w-full flex flex-col"
@@ -571,7 +787,9 @@ function handleCardDragEnd() {
                 />
               </div>
             </template>
-            <TaskList ref="taskListRef" />
+            <TaskList
+              ref="taskListRef"
+            />
             </UCard>
           </div>
 
@@ -632,6 +850,32 @@ function handleCardDragEnd() {
             </div>
             </UCard>
           </div>
+        </div>
+
+        <!-- Backlog Card - Full Width Below Grid (Outside Grid Container) -->
+        <div
+          ref="backlogCardRef"
+          class="relative z-10 transition-all duration-500 h-full flex mt-4"
+          @dragover="handleBacklogListDragOver($event)"
+          @drop="handleBacklogListDrop($event)"
+        >
+          <UCard
+            class="relative z-10 transition-all duration-500 w-full flex flex-col"
+            :class="{
+              'blur-md opacity-50': taskListBlurred && restTransition === 'none'
+            }"
+          >
+          <template #header>
+            <div class="flex items-center justify-between w-full">
+              <h3 class="text-lg font-semibold">
+                Backlog
+              </h3>
+            </div>
+          </template>
+          <BacklogList
+            ref="backlogListRef"
+          />
+          </UCard>
         </div>
       </div>
     </Transition>

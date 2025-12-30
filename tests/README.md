@@ -2,9 +2,9 @@
 
 This directory contains automated E2E tests for the Sphinx Focus application using Playwright.
 
-> **Test Count:** 212 tests  
+> **Test Count:** 244 tests  
 > **Coverage:** 100% of defined features  
-> **Last Updated:** 2025-12-20
+> **Last Updated:** 2025-11-28
 
 ## Directory Structure
 
@@ -27,6 +27,10 @@ tests/
 │   │   ├── task-drag-drop.spec.ts    # [P3 - Low] Drag & drop reordering
 │   │   ├── task-fade-away.spec.ts    # [P2 - Medium] Completed task fading
 │   │   └── task-settings.spec.ts     # [P2 - Medium] Task position & fade settings
+│   ├── backlog/                      # Backlog feature tests
+│   │   ├── backlog-crud.spec.ts      # [P1 - High] CRUD operations
+│   │   ├── backlog-drag-drop.spec.ts # [P3 - Low] Internal drag & drop reordering
+│   │   └── backlog-cross-list.spec.ts # [P1 - High] Cross-list drag between Task List and Backlog
 │   └── ui/                           # UI/UX tests
 │       ├── about-modal.spec.ts       # [P3 - Low] About modal & tabs (incl. changelog, disclaimer)
 │       ├── card-reordering.spec.ts   # [P3 - Low] Timer/Task card drag reordering
@@ -112,6 +116,13 @@ Slows down each action by 500ms for observation.
 | `task-drag-drop.spec.ts` | 8 | Drag handle, reorder, persist order |
 | `task-fade-away.spec.ts` | 12 | Completed task fading, duration settings |
 | `task-settings.spec.ts` | 16 | Task position, fade duration settings |
+
+### Backlog (P1-P3)
+| Test File | Tests | Coverage |
+|-----------|-------|----------|
+| `backlog-crud.spec.ts` | 15 | Add, delete, complete, persist, encrypt, sort |
+| `backlog-drag-drop.spec.ts` | 7 | Internal drag & drop reordering, persist order |
+| `backlog-cross-list.spec.ts` | 10 | Cross-list drag between Task List and Backlog, position respect |
 
 ### UI (P3)
 | Test File | Tests | Coverage |
@@ -219,6 +230,8 @@ await setTabletViewport(page)
 await dragTaskByIndex(page, 0, 2)           // Drag first to third
 await dragTaskByText(page, 'Task A', 'Task B')
 const order = await getTaskOrder(page)      // Get current task order
+const backlogOrder = await getBacklogTaskOrder(page)  // Get backlog task order
+await dragTaskBetweenLists(page, 'tasks', 'backlog', 'Task A', 'Target Task')  // Cross-list drag
 ```
 
 ### Color Mode Helpers
@@ -278,6 +291,12 @@ import {
 | TaskList | Task text | `task-text-{id}` |
 | TaskList | Checkbox | `task-checkbox-{id}` |
 | TaskList | Delete button | `task-delete-{id}` |
+| BacklogList | Input field | `backlog-input` |
+| BacklogList | Add button | `backlog-add` |
+| BacklogList | Task item | `backlog-item-{id}` |
+| BacklogList | Task text | `backlog-text-{id}` |
+| BacklogList | Checkbox | `backlog-checkbox-{id}` |
+| BacklogList | Delete button | `backlog-delete-{id}` |
 | SecuritySetupModal | PIN option | `security-pin-option` |
 | SecuritySetupModal | Auto option | `security-auto-option` |
 | SecuritySetupModal | PIN inputs | `pin-input-{0-3}` |

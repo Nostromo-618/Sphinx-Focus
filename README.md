@@ -61,15 +61,14 @@ pnpm generate
 
 ## Security
 
-All dependencies are audited (2025-12-19) using [AuditJS](https://github.com/sonatype-nexus-community/auditjs) with Sonatype OSS Index:
+All dependencies are audited (2025-12-30) using [AuditJS](https://github.com/sonatype-nexus-community/auditjs) with Sonatype OSS Index:
 
 ```
- Sonatype OSS Index results:
-  Total dependencies audited: 6
+Total dependencies audited: 6
 
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-[1/6] - pkg:npm/@iconify-json/lucide@1.2.81 - No vulnerabilities found!
-[2/6] - pkg:npm/@iconify-json/simple-icons@1.2.63 - No vulnerabilities found!
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+[1/6] - pkg:npm/@iconify-json/lucide@1.2.82 - No vulnerabilities found!
+[2/6] - pkg:npm/@iconify-json/simple-icons@1.2.64 - No vulnerabilities found!
 [3/6] - pkg:npm/@nuxt/icon@2.1.1 - No vulnerabilities found!
 [4/6] - pkg:npm/@nuxt/ui@4.3.0 - No vulnerabilities found!
 [5/6] - pkg:npm/animejs@4.2.2 - No vulnerabilities found!

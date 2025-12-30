@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Task } from '~/types/task'
 
-const STORAGE_KEY = 'sphinx-focus-tasks-encrypted'
+const STORAGE_KEY = 'sphinx-focus-backlog-encrypted'
 
 const emit = defineEmits<{
   taskMovedOut: [task: Task]
@@ -83,7 +83,7 @@ async function saveTasks() {
     const encrypted = await encrypt(JSON.stringify(tasks.value), key)
     localStorage.setItem(STORAGE_KEY, encrypted)
   } catch (error) {
-    console.error('Failed to save tasks:', error)
+    console.error('Failed to save backlog tasks:', error)
   }
 }
 
@@ -93,7 +93,7 @@ watch(tasks, () => {
 }, { deep: true })
 
 function generateId(): string {
-  return `task-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+  return `backlog-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
 }
 
 function getNextOrder(): number {
@@ -124,6 +124,41 @@ function addTask() {
   })
 
   newTaskText.value = ''
+  sortTasks()
+}
+
+// Add task from external source (cross-list drag)
+// If targetTaskId is provided, insert at that position; otherwise use position setting
+function addTaskFromExternal(task: Task, targetTaskId?: string) {
+  // Generate new ID to avoid conflicts
+  const newTask: Task = {
+    ...task,
+    id: generateId(),
+    order: 0 // Will be set below
+  }
+
+  if (targetTaskId) {
+    // Insert at specific position (respect drop target)
+    const targetTask = tasks.value.find(t => t.id === targetTaskId)
+    if (targetTask) {
+      const targetOrder = targetTask.order
+      // Shift tasks down to make room
+      tasks.value.forEach((t) => {
+        if (t.order >= targetOrder) {
+          t.order++
+        }
+      })
+      newTask.order = targetOrder
+    } else {
+      // Fallback to position setting if target not found
+      newTask.order = taskPosition.value === 'top' ? getMinOrder() : getNextOrder()
+    }
+  } else {
+    // No target specified - use position setting
+    newTask.order = taskPosition.value === 'top' ? getMinOrder() : getNextOrder()
+  }
+
+  tasks.value.push(newTask)
   sortTasks()
 }
 
@@ -169,7 +204,7 @@ function handleDragStart(event: DragEvent, taskId: string) {
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('text/plain', taskId)
-    event.dataTransfer.setData('data-source', 'tasks')
+    event.dataTransfer.setData('data-source', 'backlog')
   }
 }
 
@@ -182,7 +217,7 @@ function handleDragOver(event: DragEvent, targetTaskId: string) {
   // Check if this is an external drag (no draggedTaskId means it's from another list)
   if (!draggedTaskId.value && event.dataTransfer?.types.includes('data-source')) {
     // External drag - set dragOverTaskId so parent can use it
-    externalDragSource.value = 'backlog' // Assume from backlog if not from this list
+    externalDragSource.value = 'tasks' // Assume from tasks if not from this list
     dragOverTaskId.value = targetTaskId
     return
   }
@@ -203,9 +238,9 @@ function handleDragLeave() {
 function handleDrop(event: DragEvent, targetTaskId: string) {
   event.preventDefault()
 
-  // Check if this is an external drag (from BacklogList)
+  // Check if this is an external drag (from TaskList)
   const source = event.dataTransfer?.getData('data-source')
-  if (source && source === 'backlog') {
+  if (source && source === 'tasks') {
     // Store target task ID for parent component to use
     // The parent's card drop handler will check dragOverTaskId
     // For now, let the event bubble to card handler which will handle it
@@ -254,44 +289,23 @@ function handleDrop(event: DragEvent, targetTaskId: string) {
 }
 
 function handleDragEnd() {
+  // If task was dragged out, emit event
+  if (draggedTaskId.value) {
+    const task = tasks.value.find(t => t.id === draggedTaskId.value)
+    if (task && externalDragSource.value === null) {
+      // Check if drop actually happened outside (this is a best-effort check)
+      // The parent component will handle the actual transfer
+    }
+  }
+
   draggedTaskId.value = null
   dragOverTaskId.value = null
   externalDragSource.value = null
 }
 
-// Add task from external source (cross-list drag)
-// If targetTaskId is provided, insert at that position; otherwise use position setting
-function addTaskFromExternal(task: Task, targetTaskId?: string) {
-  // Generate new ID to avoid conflicts
-  const newTask: Task = {
-    ...task,
-    id: generateId(),
-    order: 0 // Will be set below
-  }
-
-  if (targetTaskId) {
-    // Insert at specific position (respect drop target)
-    const targetTask = tasks.value.find(t => t.id === targetTaskId)
-    if (targetTask) {
-      const targetOrder = targetTask.order
-      // Shift tasks down to make room
-      tasks.value.forEach((t) => {
-        if (t.order >= targetOrder) {
-          t.order++
-        }
-      })
-      newTask.order = targetOrder
-    } else {
-      // Fallback to position setting if target not found
-      newTask.order = taskPosition.value === 'top' ? getMinOrder() : getNextOrder()
-    }
-  } else {
-    // No target specified - use position setting
-    newTask.order = taskPosition.value === 'top' ? getMinOrder() : getNextOrder()
-  }
-
-  tasks.value.push(newTask)
-  sortTasks()
+// Handle external drop (from TaskList)
+function handleExternalDrop(task: Task) {
+  addTaskFromExternal(task)
 }
 
 function handleKeyPress(event: KeyboardEvent) {
@@ -370,13 +384,13 @@ defineExpose({
     <div class="flex gap-2">
       <UInput
         v-model="newTaskText"
-        data-testid="task-input"
+        data-testid="backlog-input"
         placeholder="Add a new task..."
         class="flex-1"
         @keypress="handleKeyPress"
       />
       <UButton
-        data-testid="task-add"
+        data-testid="backlog-add"
         label="Add"
         icon="i-lucide-plus"
         :disabled="!newTaskText.trim()"
@@ -400,7 +414,7 @@ defineExpose({
       <div
         v-for="task in tasks"
         :key="task.id"
-        :data-testid="`task-item-${task.id}`"
+        :data-testid="`backlog-item-${task.id}`"
         :draggable="true"
         class="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-border bg-default hover:bg-elevated transition-all cursor-move"
         :class="{
@@ -425,7 +439,7 @@ defineExpose({
 
         <!-- Checkbox -->
         <input
-          :data-testid="`task-checkbox-${task.id}`"
+          :data-testid="`backlog-checkbox-${task.id}`"
           type="checkbox"
           :checked="task.completed"
           class="size-5 rounded border-border text-primary focus:ring-primary cursor-pointer"
@@ -434,7 +448,7 @@ defineExpose({
 
         <!-- Task Text -->
         <span
-          :data-testid="`task-text-${task.id}`"
+          :data-testid="`backlog-text-${task.id}`"
           class="flex-1 text-default"
           :class="{
             'line-through text-muted': task.completed
@@ -445,7 +459,7 @@ defineExpose({
 
         <!-- Delete Button -->
         <UButton
-          :data-testid="`task-delete-${task.id}`"
+          :data-testid="`backlog-delete-${task.id}`"
           icon="i-lucide-trash-2"
           color="error"
           variant="ghost"
@@ -457,3 +471,4 @@ defineExpose({
     </div>
   </div>
 </template>
+

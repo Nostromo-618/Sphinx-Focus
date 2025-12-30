@@ -1,14 +1,14 @@
 # Sphinx Focus QA Automation Strategy
 
-> **Version:** 2.3.3  
-> **Last Updated:** 2025-12-20  
+> **Version:** 2.4.0  
+> **Last Updated:** 2025-11-28  
 > **Status:** Complete (100% Coverage Achieved)
 
 ## Overview
 
 This document defines the QA automation strategy for Sphinx Focus, a Pomodoro timer and encrypted task manager built with Nuxt 4, Vue 3, and Nuxt UI v4.
 
-**Current Status:** 212 E2E tests covering all defined features.
+**Current Status:** 244 E2E tests covering all defined features.
 
 ## Testing Tools
 
@@ -76,6 +76,10 @@ tests/
 │   │   ├── task-drag-drop.spec.ts    # Drag & drop reordering
 │   │   ├── task-fade-away.spec.ts    # Completed task fading
 │   │   └── task-settings.spec.ts     # Task position & fade settings
+│   ├── backlog/                     # Backlog feature tests (3 files, 32 tests)
+│   │   ├── backlog-crud.spec.ts      # CRUD operations
+│   │   ├── backlog-drag-drop.spec.ts # Internal drag & drop reordering
+│   │   └── backlog-cross-list.spec.ts # Cross-list drag between Task List and Backlog
 │   └── ui/                           # UI/UX tests (7 files, 61 tests)
 │       ├── about-modal.spec.ts       # About modal & tabs (incl. changelog, disclaimer)
 │       ├── card-reordering.spec.ts   # Timer/Task card drag reordering
@@ -100,6 +104,8 @@ tests/
 | P0 | Task Encryption/Decryption | Critical | 100% | ✅ Complete |
 | P1 | Timer Controls | High | 100% | ✅ Complete |
 | P1 | Task CRUD Operations | High | 100% | ✅ Complete |
+| P1 | Backlog CRUD Operations | High | 100% | ✅ Complete |
+| P1 | Cross-List Drag & Drop | High | 100% | ✅ Complete |
 | P2 | Timer Settings | Medium | 100% | ✅ Complete |
 | P2 | Timer Persistence | Medium | 100% | ✅ Complete |
 | P3 | Color Mode | Low | 100% | ✅ Complete |
@@ -131,6 +137,12 @@ tests/
    Add Task → View in List → Toggle Complete → Reorder → Delete
    ```
    - Tests: `task-crud.spec.ts` (19 tests), `task-drag-drop.spec.ts` (8 tests)
+
+5. **Backlog Management**
+   ```
+   Add to Backlog → Reorder → Transfer to Task List → Cross-list Drag
+   ```
+   - Tests: `backlog-crud.spec.ts` (15 tests), `backlog-drag-drop.spec.ts` (7 tests), `backlog-cross-list.spec.ts` (10 tests)
 
 ## Testing Strategies
 
@@ -236,6 +248,12 @@ await context.clearPermissions()
 | TaskList | Task text | `task-text-{id}` |
 | TaskList | Delete button | `task-delete-{id}` |
 | TaskList | Checkbox | `task-checkbox-{id}` |
+| BacklogList | Input field | `backlog-input` |
+| BacklogList | Add button | `backlog-add` |
+| BacklogList | Task item | `backlog-item-{id}` |
+| BacklogList | Task text | `backlog-text-{id}` |
+| BacklogList | Checkbox | `backlog-checkbox-{id}` |
+| BacklogList | Delete button | `backlog-delete-{id}` |
 | SecuritySetupModal | PIN option | `security-pin-option` |
 | SecuritySetupModal | Auto option | `security-auto-option` |
 | SecuritySetupModal | PIN inputs | `pin-input-{0-3}` |
@@ -376,6 +394,7 @@ export const REST_DURATION_SECONDS = 5 * 60
 export const STORAGE_KEYS = {
   security: 'sphinx-focus-security',
   tasks: 'sphinx-focus-tasks-encrypted',
+  backlog: 'sphinx-focus-backlog-encrypted',
   settings: 'sphinx-focus-settings-encrypted',
   disclaimer: 'sphinx-focus-disclaimer-accepted',
   timer: 'sphinx-focus-timer',
@@ -451,8 +470,9 @@ pnpm exec playwright show-trace test-results/*/trace.zip
 | Security | 5 | 47 | ✅ Complete |
 | Timer | 4 | 49 | ✅ Complete |
 | Tasks | 4 | 55 | ✅ Complete |
+| Backlog | 3 | 32 | ✅ Complete |
 | UI | 7 | 61 | ✅ Complete |
-| **Total** | **20** | **212** | **✅ 100%** |
+| **Total** | **23** | **244** | **✅ 100%** |
 
 ## References
 

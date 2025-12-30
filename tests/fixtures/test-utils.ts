@@ -16,6 +16,7 @@ export const REST_DURATION_SECONDS = 5 * 60
 export const STORAGE_KEYS = {
   security: 'sphinx-focus-security',
   tasks: 'sphinx-focus-tasks-encrypted',
+  backlog: 'sphinx-focus-backlog-encrypted',
   settings: 'sphinx-focus-settings-encrypted',
   disclaimer: 'sphinx-focus-disclaimer-accepted',
   // Legacy keys (for migration tests only - no longer used)
@@ -164,6 +165,39 @@ export class SphinxFocusPage {
     const items = this.page.locator('[data-testid^="task-item-"]')
     const item = items.nth(index)
     return await item.locator('[data-testid^="task-text-"]').textContent() || ''
+  }
+
+  // ---------------------------------------------------------------------------
+  // Backlog Management
+  // ---------------------------------------------------------------------------
+
+  async addBacklogTask(text: string) {
+    await this.page.getByTestId('backlog-input').fill(text)
+    await this.page.getByTestId('backlog-add').click()
+  }
+
+  async addBacklogTaskWithEnter(text: string) {
+    await this.page.getByTestId('backlog-input').fill(text)
+    await this.page.getByTestId('backlog-input').press('Enter')
+  }
+
+  async toggleBacklogTask(taskId: string) {
+    await this.page.getByTestId(`backlog-checkbox-${taskId}`).click()
+  }
+
+  async deleteBacklogTask(taskId: string) {
+    await this.page.getByTestId(`backlog-delete-${taskId}`).click()
+  }
+
+  async getBacklogTaskCount(): Promise<number> {
+    const items = this.page.locator('[data-testid^="backlog-item-"]')
+    return await items.count()
+  }
+
+  async getBacklogTaskText(index: number): Promise<string> {
+    const items = this.page.locator('[data-testid^="backlog-item-"]')
+    const item = items.nth(index)
+    return await item.locator('[data-testid^="backlog-text-"]').textContent() || ''
   }
 
   // ---------------------------------------------------------------------------
@@ -424,6 +458,103 @@ export async function getTaskOrder(page: Page): Promise<string[]> {
   }
 
   return order
+}
+
+/**
+ * Get the current order of backlog tasks as an array of text content
+ * @param page - Playwright page object
+ * @returns Array of backlog task text content in current order
+ */
+export async function getBacklogTaskOrder(page: Page): Promise<string[]> {
+  const tasks = page.locator('[data-testid^="backlog-item-"]')
+  const count = await tasks.count()
+  const order: string[] = []
+
+  for (let i = 0; i < count; i++) {
+    const text = await tasks.nth(i).locator('[data-testid^="backlog-text-"]').textContent()
+    order.push(text || '')
+  }
+
+  return order
+}
+
+/**
+ * Drag a task between Task List and Backlog
+ * @param page - Playwright page object
+ * @param fromList - 'tasks' or 'backlog'
+ * @param toList - 'tasks' or 'backlog'
+ * @param taskText - Text content of the task to drag
+ * @param targetTaskText - Optional: Text content of the target task to drop on (for position)
+ */
+export async function dragTaskBetweenLists(
+  page: Page,
+  fromList: 'tasks' | 'backlog',
+  toList: 'tasks' | 'backlog',
+  taskText: string,
+  targetTaskText?: string
+) {
+  const fromPrefix = fromList === 'tasks' ? 'task-item-' : 'backlog-item-'
+  const toPrefix = toList === 'tasks' ? 'task-item-' : 'backlog-item-'
+
+  const fromTask = page.locator(`[data-testid^="${fromPrefix}"]`).filter({ hasText: taskText })
+  
+  if (targetTaskText) {
+    // For position-aware drags: hover over target task first to set dragOverTaskId
+    // Then drop on the card container so the card handler can read dragOverTaskId
+    const targetTask = page.locator(`[data-testid^="${toPrefix}"]`).filter({ hasText: targetTaskText })
+    const fromBox = await fromTask.boundingBox()
+    const targetBox = await targetTask.boundingBox()
+    
+    // Find card container to drop on
+    let cardContainer
+    if (toList === 'tasks') {
+      cardContainer = page.locator('[data-testid="task-settings-button"]').locator('..').locator('..').locator('..')
+    } else {
+      cardContainer = page.locator('h3:has-text("Backlog")').locator('..').locator('..')
+    }
+    const cardBox = await cardContainer.boundingBox()
+    
+    if (fromBox && targetBox && cardBox) {
+      // Start drag
+      await page.mouse.move(fromBox.x + fromBox.width / 2, fromBox.y + fromBox.height / 2)
+      await page.mouse.down()
+      await page.waitForTimeout(100)
+      
+      // Hover over target task to set dragOverTaskId
+      await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + targetBox.height / 2)
+      await page.waitForTimeout(300)
+      
+      // Drop on card container (dragOverTaskId should still be set)
+      await page.mouse.move(cardBox.x + cardBox.width / 2, cardBox.y + cardBox.height / 2)
+      await page.waitForTimeout(100)
+      await page.mouse.up()
+    } else {
+      // Fallback: simple dragTo
+      await fromTask.dragTo(targetTask)
+    }
+  } else {
+    // Simple transfer without position - drop on card container
+    let toTarget
+    if (toList === 'tasks') {
+      const settingsButton = page.locator('[data-testid="task-settings-button"]')
+      if (await settingsButton.count() > 0) {
+        toTarget = settingsButton
+      } else {
+        toTarget = page.locator('[data-testid="task-input"]')
+      }
+    } else {
+      const backlogHeader = page.locator('h3:has-text("Backlog")')
+      if (await backlogHeader.count() > 0) {
+        toTarget = backlogHeader
+      } else {
+        toTarget = page.locator('[data-testid="backlog-input"]')
+      }
+    }
+    await fromTask.dragTo(toTarget)
+  }
+  
+  // Allow time for state update
+  await page.waitForTimeout(500)
 }
 
 // ============================================================================

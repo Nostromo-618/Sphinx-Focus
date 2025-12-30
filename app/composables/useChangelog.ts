@@ -12,6 +12,23 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.4.0',
+    date: '2025-12-30',
+    changes: {
+      added: [
+        'Backlog card: separate task list below Timer and Task List cards',
+        'Cross-list drag and drop: move tasks between Task List and Backlog',
+        'Backlog respects same settings as Task List (fade duration, add position)',
+        'Backlog applies same blur logic during focus mode as Task List',
+        'Full-width Backlog card spans the combined width of Timer and Task List'
+      ],
+      changed: [
+        'Task drag and drop now respects drop position even when moving between lists',
+        'Card dragging restricted to Timer/Task List row only (Backlog stays fixed at bottom)'
+      ]
+    }
+  },
+  {
     version: '2.3.3',
     date: '2025-12-19',
     changes: {
