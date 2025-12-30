@@ -299,7 +299,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 flex-1 flex flex-col">
     <!-- Add Task Input -->
     <div class="flex gap-2">
       <UInput
@@ -322,7 +322,7 @@ defineExpose({
     <!-- Task List -->
     <div
       v-if="tasks.length === 0"
-      class="text-center py-8 text-muted"
+      class="text-center py-8 text-muted flex-1 flex items-center justify-center"
     >
       <p>No tasks yet. Add one above to get started!</p>
     </div>

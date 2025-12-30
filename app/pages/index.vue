@@ -37,6 +37,26 @@ const showTaskSettingsModal = ref(false)
 const draggedCardId = ref<'timer' | 'tasks' | null>(null)
 const dragOverCardId = ref<'timer' | 'tasks' | null>(null)
 
+// Card element references for overlap detection
+// Store actual DOM elements, not component refs
+const timerCardElement = ref<HTMLElement | null>(null)
+const tasksCardElement = ref<HTMLElement | null>(null)
+const timerCardRef = ref<any>(null)
+const tasksCardRef = ref<any>(null)
+const draggedCardElement = ref<HTMLElement | null>(null)
+const globalDragOverListener = ref<((event: DragEvent) => void) | null>(null)
+const overlapCheckFrame = ref<number | null>(null)
+
+// Helper to get DOM element from ref (now it's a div wrapper, so it's the element itself)
+function getCardElement(cardRef: any): HTMLElement | null {
+  if (!cardRef) return null
+  // If it's already a DOM element (div wrapper)
+  if (cardRef instanceof HTMLElement) return cardRef
+  // If it's a component ref, get $el
+  if (cardRef.$el) return cardRef.$el as HTMLElement
+  return null
+}
+
 // Rest mode stage management
 // Stage 0: Normal mode (no rest)
 // Stage 2: Immersive centered rest mode with RestModeOverlay
@@ -217,6 +237,61 @@ const gridColsClass = computed(() => {
     : 'md:grid-cols-[1.618fr_1fr]'
 })
 
+// Update card elements when refs change or card order changes
+watch([timerCardRef, tasksCardRef, cardOrder], () => {
+  nextTick(() => {
+    timerCardElement.value = getCardElement(timerCardRef.value)
+    tasksCardElement.value = getCardElement(tasksCardRef.value)
+  })
+}, { immediate: true, flush: 'post' })
+
+// Helper function to check if two rectangles overlap
+function rectanglesOverlap(rect1: DOMRect, rect2: DOMRect): boolean {
+  return !(
+    rect1.right < rect2.left ||
+    rect1.left > rect2.right ||
+    rect1.bottom < rect2.top ||
+    rect1.top > rect2.bottom
+  )
+}
+
+// Check if a point is within a rectangle
+function pointInRect(x: number, y: number, rect: DOMRect): boolean {
+  return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
+}
+
+// Check for overlap between dragged card and target cards
+// Also checks if mouse cursor is over target cards
+function checkCardOverlap(mouseX?: number, mouseY?: number): 'timer' | 'tasks' | null {
+  if (!draggedCardId.value || !draggedCardElement.value) return null
+
+  const draggedRect = draggedCardElement.value.getBoundingClientRect()
+
+  // Check overlap with timer card
+  if (draggedCardId.value !== 'timer' && timerCardElement.value) {
+    const timerRect = timerCardElement.value.getBoundingClientRect()
+    // Check if dragged card overlaps OR mouse is over timer card
+    const overlaps = rectanglesOverlap(draggedRect, timerRect)
+    const mouseOver = mouseX !== undefined && mouseY !== undefined && pointInRect(mouseX, mouseY, timerRect)
+    if (overlaps || mouseOver) {
+      return 'timer'
+    }
+  }
+
+  // Check overlap with tasks card
+  if (draggedCardId.value !== 'tasks' && tasksCardElement.value) {
+    const tasksRect = tasksCardElement.value.getBoundingClientRect()
+    // Check if dragged card overlaps OR mouse is over tasks card
+    const overlaps = rectanglesOverlap(draggedRect, tasksRect)
+    const mouseOver = mouseX !== undefined && mouseY !== undefined && pointInRect(mouseX, mouseY, tasksRect)
+    if (overlaps || mouseOver) {
+      return 'tasks'
+    }
+  }
+
+  return null
+}
+
 // Card drag handlers
 function handleCardDragStart(event: DragEvent, cardId: 'timer' | 'tasks') {
   draggedCardId.value = cardId
@@ -224,18 +299,52 @@ function handleCardDragStart(event: DragEvent, cardId: 'timer' | 'tasks') {
     event.dataTransfer.effectAllowed = 'move'
     event.dataTransfer.setData('text/plain', cardId)
 
-    // Find the parent card element for the drag ghost image
-    // The header div is inside UCard's header slot, so we traverse up to find the card
+    // Find the parent wrapper div for the drag ghost image
+    // The header div is inside UCard's header slot, traverse up to find the wrapper div
     const header = event.currentTarget as HTMLElement
     const headerSlot = header.closest('[data-slot="header"]')
     const card = headerSlot?.parentElement as HTMLElement | null
-    if (card) {
+    // Now find the wrapper div (parent of UCard)
+    const wrapper = card?.parentElement as HTMLElement | null
+    if (wrapper) {
+      // Store the dragged card wrapper element for overlap detection
+      draggedCardElement.value = wrapper
+
       // Calculate offset to position the ghost image at the cursor position
-      const rect = card.getBoundingClientRect()
+      const rect = wrapper.getBoundingClientRect()
       const offsetX = event.clientX - rect.left
       const offsetY = event.clientY - rect.top
-      event.dataTransfer.setDragImage(card, offsetX, offsetY)
+      event.dataTransfer.setDragImage(wrapper, offsetX, offsetY)
     }
+  }
+
+  // Set up global dragover listener for overlap detection
+  if (import.meta.client) {
+    const handleGlobalDragOver = (e: DragEvent) => {
+      e.preventDefault()
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'move'
+      }
+
+      // Use requestAnimationFrame to throttle overlap checks
+      if (overlapCheckFrame.value !== null) {
+        cancelAnimationFrame(overlapCheckFrame.value)
+      }
+
+      overlapCheckFrame.value = requestAnimationFrame(() => {
+        // Pass mouse coordinates for cursor-based detection
+        const overlappingCard = checkCardOverlap(e.clientX, e.clientY)
+        if (overlappingCard) {
+          dragOverCardId.value = overlappingCard
+        } else {
+          // Clear highlight if no overlap detected
+          dragOverCardId.value = null
+        }
+      })
+    }
+
+    globalDragOverListener.value = handleGlobalDragOver
+    document.addEventListener('dragover', handleGlobalDragOver)
   }
 }
 
@@ -244,13 +353,27 @@ function handleCardDragOver(event: DragEvent, cardId: 'timer' | 'tasks') {
   if (event.dataTransfer) {
     event.dataTransfer.dropEffect = 'move'
   }
-  if (draggedCardId.value !== cardId) {
+  // Always check for overlap first
+  const overlappingCard = checkCardOverlap(event.clientX, event.clientY)
+  if (overlappingCard) {
+    dragOverCardId.value = overlappingCard
+  } else if (draggedCardId.value && draggedCardId.value !== cardId) {
+    // Fallback to event-based detection if no overlap but we're dragging
     dragOverCardId.value = cardId
   }
 }
 
-function handleCardDragLeave() {
-  dragOverCardId.value = null
+function handleCardDragLeave(event?: DragEvent) {
+  // Only clear if no overlap is detected (prevents flickering)
+  // Use a small delay to check overlap after leave event fires
+  setTimeout(() => {
+    const mouseX = event?.clientX
+    const mouseY = event?.clientY
+    const overlappingCard = checkCardOverlap(mouseX, mouseY)
+    if (!overlappingCard) {
+      dragOverCardId.value = null
+    }
+  }, 10)
 }
 
 function handleCardDrop(event: DragEvent, cardId: 'timer' | 'tasks') {
@@ -258,6 +381,7 @@ function handleCardDrop(event: DragEvent, cardId: 'timer' | 'tasks') {
 
   if (!draggedCardId.value || draggedCardId.value === cardId) {
     draggedCardId.value = null
+    draggedCardElement.value = null
     dragOverCardId.value = null
     return
   }
@@ -267,11 +391,25 @@ function handleCardDrop(event: DragEvent, cardId: 'timer' | 'tasks') {
   updateSetting('cardOrder', newOrder)
 
   draggedCardId.value = null
+  draggedCardElement.value = null
   dragOverCardId.value = null
 }
 
 function handleCardDragEnd() {
+  // Clean up global drag listener
+  if (import.meta.client && globalDragOverListener.value) {
+    document.removeEventListener('dragover', globalDragOverListener.value)
+    globalDragOverListener.value = null
+  }
+
+  // Cancel any pending overlap checks
+  if (overlapCheckFrame.value !== null) {
+    cancelAnimationFrame(overlapCheckFrame.value)
+    overlapCheckFrame.value = null
+  }
+
   draggedCardId.value = null
+  draggedCardElement.value = null
   dragOverCardId.value = null
 }
 </script>
@@ -288,16 +426,19 @@ function handleCardDragEnd() {
           'blur-3xl opacity-0': restTransition === 'exit-hide'
         }"
       >
-        <div class="grid grid-cols-1 gap-4 relative" :class="gridColsClass">
+        <div class="grid grid-cols-1 gap-4 relative items-stretch" :class="gridColsClass">
           <!-- Timer Card -->
-          <UCard
+          <div
             v-if="cardOrder === 'timer-first'"
-            class="relative z-[60] transition-all duration-1000"
+            ref="timerCardRef"
+            class="relative z-[60] transition-all duration-1000 h-full flex"
             :class="{
-              'opacity-50': draggedCardId === 'timer',
-              'ring-2 ring-primary': dragOverCardId === 'timer' && draggedCardId !== 'timer'
+              'ring-4 ring-primary': dragOverCardId === 'timer' && draggedCardId !== 'timer'
             }"
+            @dragover="handleCardDragOver($event, 'timer')"
+            @drop="handleCardDrop($event, 'timer')"
           >
+            <UCard class="relative z-[60] transition-all duration-1000 w-full flex flex-col">
             <template #header>
               <div
                 class="flex items-center justify-between w-full hover:cursor-move"
@@ -341,18 +482,26 @@ function handleCardDragEnd() {
               </div>
               <FocusTimer ref="focusTimerRef" />
             </div>
-          </UCard>
+            </UCard>
+          </div>
 
           <!-- Task List Card - blurred via quick toggle during focus mode -->
-          <UCard
+          <div
             v-if="cardOrder === 'timer-first'"
-            class="relative z-10 transition-all duration-500"
+            ref="tasksCardRef"
+            class="relative z-10 transition-all duration-500 h-full flex"
             :class="{
-              'blur-md opacity-50': taskListBlurred && restTransition === 'none',
-              'opacity-50': draggedCardId === 'tasks',
-              'ring-2 ring-primary': dragOverCardId === 'tasks' && draggedCardId !== 'tasks'
+              'ring-4 ring-primary': dragOverCardId === 'tasks' && draggedCardId !== 'tasks'
             }"
+            @dragover="handleCardDragOver($event, 'tasks')"
+            @drop="handleCardDrop($event, 'tasks')"
           >
+            <UCard
+              class="relative z-10 transition-all duration-500 w-full flex flex-col"
+              :class="{
+                'blur-md opacity-50': taskListBlurred && restTransition === 'none'
+              }"
+            >
             <template #header>
               <div
                 class="flex items-center justify-between w-full hover:cursor-move"
@@ -378,18 +527,26 @@ function handleCardDragEnd() {
               </div>
             </template>
             <TaskList ref="taskListRef" />
-          </UCard>
+            </UCard>
+          </div>
 
           <!-- Task List Card (when first) -->
-          <UCard
+          <div
             v-if="cardOrder === 'tasks-first'"
-            class="relative z-10 transition-all duration-500"
+            ref="tasksCardRef"
+            class="relative z-10 transition-all duration-500 h-full flex"
             :class="{
-              'blur-md opacity-50': taskListBlurred && restTransition === 'none',
-              'opacity-50': draggedCardId === 'tasks',
-              'ring-2 ring-primary': dragOverCardId === 'tasks' && draggedCardId !== 'tasks'
+              'ring-4 ring-primary': dragOverCardId === 'tasks' && draggedCardId !== 'tasks'
             }"
+            @dragover="handleCardDragOver($event, 'tasks')"
+            @drop="handleCardDrop($event, 'tasks')"
           >
+            <UCard
+              class="relative z-10 transition-all duration-500 w-full flex flex-col"
+              :class="{
+                'blur-md opacity-50': taskListBlurred && restTransition === 'none'
+              }"
+            >
             <template #header>
               <div
                 class="flex items-center justify-between w-full hover:cursor-move"
@@ -415,17 +572,21 @@ function handleCardDragEnd() {
               </div>
             </template>
             <TaskList ref="taskListRef" />
-          </UCard>
+            </UCard>
+          </div>
 
           <!-- Timer Card (when second) -->
-          <UCard
+          <div
             v-if="cardOrder === 'tasks-first'"
-            class="relative z-[60] transition-all duration-1000"
+            ref="timerCardRef"
+            class="relative z-[60] transition-all duration-1000 h-full flex"
             :class="{
-              'opacity-50': draggedCardId === 'timer',
-              'ring-2 ring-primary': dragOverCardId === 'timer' && draggedCardId !== 'timer'
+              'ring-4 ring-primary': dragOverCardId === 'timer' && draggedCardId !== 'timer'
             }"
+            @dragover="handleCardDragOver($event, 'timer')"
+            @drop="handleCardDrop($event, 'timer')"
           >
+            <UCard class="relative z-[60] transition-all duration-1000 w-full flex flex-col">
             <template #header>
               <div
                 class="flex items-center justify-between w-full hover:cursor-move"
@@ -469,7 +630,8 @@ function handleCardDragEnd() {
               </div>
               <FocusTimer ref="focusTimerRef" />
             </div>
-          </UCard>
+            </UCard>
+          </div>
         </div>
       </div>
     </Transition>
