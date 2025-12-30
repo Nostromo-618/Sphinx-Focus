@@ -5,6 +5,9 @@ files:
   - .output/public/**/*
 directories:
   output: dist-electron
+asar: true
+asarUnpack:
+  - .output/public/**/*
 
 mac:
   category: public.app-category.productivity

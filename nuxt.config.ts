@@ -17,12 +17,16 @@ export default defineNuxtConfig({
   },
 
   app: {
+    // Use relative base path for static generation (works for both web and Electron)
+    baseURL: '/',
     head: {
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }
       ]
     }
   },
+
+  ssr: false,
 
   css: ['~/assets/css/main.css'],
 

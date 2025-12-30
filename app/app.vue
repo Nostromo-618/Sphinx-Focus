@@ -253,6 +253,7 @@ function handleReconsider() {
       mode="drawer"
       :menu="{ side: 'right', overlay: false }"
       :ui="{ toggle: 'sm:hidden' }"
+      class="electron-drag"
     >
       <template #left>
         <AboutModal />

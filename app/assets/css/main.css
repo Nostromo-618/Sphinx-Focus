@@ -97,3 +97,16 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Chrome, Safari and Opera */
 }
+
+/* Electron window dragging - make header draggable on macOS */
+.electron-drag {
+  -webkit-app-region: drag;
+}
+
+/* Make buttons and interactive elements clickable within drag region */
+.electron-drag button,
+.electron-drag a,
+.electron-drag input,
+.electron-drag [role="button"] {
+  -webkit-app-region: no-drag;
+}
