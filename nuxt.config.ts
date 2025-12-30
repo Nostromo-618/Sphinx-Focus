@@ -2,8 +2,15 @@
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
-    '@nuxt/ui'
+    '@nuxt/ui',
+    'nuxt-electron'
   ],
+
+  electron: {
+    build: [
+      { entry: 'electron/main.ts' }
+    ]
+  },
 
   devtools: {
     enabled: true

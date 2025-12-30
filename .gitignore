@@ -30,3 +30,9 @@ logs
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Electron
+dist-electron/
+*.dmg
+*.app
+public/icon.iconset/

@@ -1,6 +1,9 @@
 {
   "name": "sphinx-focus",
   "version": "2.4.0",
+  "description": "A Pomodoro timer and encrypted task manager",
+  "author": "Sphinx Focus",
+  "main": "dist-electron/main.js",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,7 +18,11 @@
     "test:ui": "playwright test --ui",
     "test:debug": "playwright test --debug",
     "test:headed": "playwright test --headed",
-    "test:chromium": "playwright test --project=chromium"
+    "test:chromium": "playwright test --project=chromium",
+    "dev:electron": "nuxt dev",
+    "build:electron": "nuxt build && electron-builder --mac",
+    "pack:electron": "electron-builder --mac --dir",
+    "icon:generate": "node scripts/generate-icon.mjs"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.82",
@@ -28,7 +35,11 @@
   "devDependencies": {
     "@nuxt/eslint": "^1.12.1",
     "@playwright/test": "^1.57.0",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
     "eslint": "^9.39.2",
+    "nuxt-electron": "^0.7.0",
+    "sharp": "^0.34.5",
     "typescript": "^5.9.3",
     "vue-tsc": "^3.2.1"
   },
