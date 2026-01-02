@@ -16,6 +16,7 @@ export interface EncryptedSettings {
   // Task settings
   taskFadeDuration: number // seconds
   taskPosition: 'top' | 'bottom'
+  taskRowHeight: 'default' | 'medium' | 'large'
   // Layout settings
   cardOrder: 'timer-first' | 'tasks-first'
 }
@@ -30,6 +31,7 @@ const DEFAULT_SETTINGS: EncryptedSettings = {
   quickBlur: true, // Default to blurred when auto-blur is active
   taskFadeDuration: 55,
   taskPosition: 'bottom',
+  taskRowHeight: 'default',
   cardOrder: 'timer-first'
 }
 

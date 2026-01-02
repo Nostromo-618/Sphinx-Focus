@@ -22,6 +22,21 @@ const externalDragSource = ref<string | null>(null)
 // Get settings from encrypted settings (reactive)
 const fadeDuration = computed(() => settings.taskFadeDuration)
 const taskPosition = computed(() => settings.taskPosition)
+const taskRowHeight = computed(() => settings.taskRowHeight)
+
+// Compute padding class based on row height setting
+const rowPaddingClass = computed(() => {
+  switch (taskRowHeight.value) {
+    case 'default':
+      return 'py-[5px]'
+    case 'medium':
+      return 'py-[9px]'
+    case 'large':
+      return 'py-[13.5px]'
+    default:
+      return 'py-[5px]'
+  }
+})
 
 // Load tasks when unlocked
 watch(isUnlocked, async (unlocked) => {
@@ -416,11 +431,14 @@ defineExpose({
         :key="task.id"
         :data-testid="`backlog-item-${task.id}`"
         :draggable="true"
-        class="flex items-center gap-3 py-2.5 px-3 rounded-lg border border-border bg-default hover:bg-elevated transition-all cursor-move"
-        :class="{
-          'opacity-50': draggedTaskId === task.id,
-          'ring-2 ring-primary': dragOverTaskId === task.id && draggedTaskId !== task.id
-        }"
+        class="flex items-center gap-3 px-3 rounded-lg border border-border bg-default hover:bg-elevated transition-all cursor-move"
+        :class="[
+          rowPaddingClass,
+          {
+            'opacity-50': draggedTaskId === task.id,
+            'ring-2 ring-primary': dragOverTaskId === task.id && draggedTaskId !== task.id
+          }
+        ]"
         :style="{
           opacity: task.completed && task.completedAt ? taskOpacities[task.id] ?? calculateOpacity(task) : 1,
           transition: 'opacity 0.3s ease-in-out'

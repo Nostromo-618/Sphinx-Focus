@@ -113,12 +113,15 @@ function createWindow() {
 
   if (process.env.VITE_DEV_SERVER_URL) {
     win.loadURL(process.env.VITE_DEV_SERVER_URL)
-    win.webContents.openDevTools()
   } else {
     // Use custom app:// protocol to load files from asar
     // This works with webSecurity enabled
     // Load from root path so Nuxt router works correctly
     win.loadURL('app://.')
+  }
+
+  if (!app.isPackaged) {
+    win.webContents.openDevTools()
   }
 }
 

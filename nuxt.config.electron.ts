@@ -1,15 +1,16 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-// Web-only config (no Electron)
+// Electron config
 export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
-    '@nuxt/ui'
+    '@nuxt/ui',
+    'nuxt-electron'
   ],
 
-  // Provide empty build array so nuxt-electron does nothing
   electron: {
-    build: [],
-    disableDefaultOptions: true
+    build: [
+      { entry: 'electron/main.ts' }
+    ]
   },
 
   devtools: {

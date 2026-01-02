@@ -12,6 +12,16 @@ export interface ChangelogEntry {
 
 export const changelogData: ChangelogEntry[] = [
   {
+    version: '2.4.1',
+    date: '2026-01-02',
+    changes: {
+      added: [
+        'Configurable row height for task items: choose Default (34px), Medium (42px), or Large (51px)',
+        'Row height setting in Task Settings modal applies to both Task List and Backlog'
+      ]
+    }
+  },
+  {
     version: '2.4.0',
     date: '2025-12-30',
     changes: {

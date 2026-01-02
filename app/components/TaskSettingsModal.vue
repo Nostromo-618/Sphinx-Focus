@@ -9,10 +9,17 @@ const { settings, updateSettings, isSettingsLoaded } = useEncryptedSettings()
 const fadeDuration = ref(55)
 const fadeError = ref('')
 const taskPosition = ref<'bottom' | 'top'>('bottom')
+const taskRowHeight = ref<'default' | 'medium' | 'large'>('default')
 
 const positionOptions = [
   { value: 'bottom', label: 'Bottom', description: 'New tasks appear at the end of the list' },
   { value: 'top', label: 'Top', description: 'New tasks appear at the beginning of the list' }
+]
+
+const rowHeightOptions = [
+  { value: 'default', label: 'Default', description: 'Compact rows (34px)' },
+  { value: 'medium', label: 'Medium', description: 'Standard rows (42px)' },
+  { value: 'large', label: 'Large', description: 'Spacious rows (51px)' }
 ]
 
 // Load current settings when they become available
@@ -20,6 +27,7 @@ watch(isSettingsLoaded, (loaded) => {
   if (loaded) {
     fadeDuration.value = settings.taskFadeDuration
     taskPosition.value = settings.taskPosition
+    taskRowHeight.value = settings.taskRowHeight
   }
 }, { immediate: true })
 
@@ -41,7 +49,8 @@ function saveSettings() {
   // Update all settings at once
   updateSettings({
     taskFadeDuration: fadeDuration.value,
-    taskPosition: taskPosition.value
+    taskPosition: taskPosition.value,
+    taskRowHeight: taskRowHeight.value
   })
 
   emit('close')
@@ -82,6 +91,21 @@ function handleCancel() {
           />
           <p class="text-xs text-muted">
             Where new tasks appear in your list
+          </p>
+        </div>
+
+        <!-- Row Height -->
+        <div class="space-y-2">
+          <label class="text-sm font-medium text-default">
+            Row Height
+          </label>
+          <URadioGroup
+            v-model="taskRowHeight"
+            :items="rowHeightOptions"
+            orientation="horizontal"
+          />
+          <p class="text-xs text-muted">
+            Height of task items in the list
           </p>
         </div>
 
