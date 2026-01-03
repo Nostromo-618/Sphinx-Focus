@@ -48,7 +48,7 @@ git commit -m "Deploy: $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to comm
 
 # Push to GitHub
 echo "⬆️  Pushing to GitHub..."
-git push origin gh-pages
+git push origin gh-pages --force
 
 # Return to main
 echo "🔙 Returning to main branch..."
