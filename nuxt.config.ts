@@ -17,11 +17,11 @@ export default defineNuxtConfig({
   },
 
   app: {
-    // Use relative base path for static generation (works for both web and Electron)
-    baseURL: '/',
+    // GitHub Pages serves from /Sphinx-Focus/ subdirectory
+    baseURL: '/Sphinx-Focus/',
     head: {
       link: [
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }
+        { rel: 'icon', type: 'image/svg+xml', href: '/Sphinx-Focus/favicon.svg' }
       ]
     }
   },
